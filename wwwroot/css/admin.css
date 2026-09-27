@@ -1,0 +1,233 @@
+/* ==========================================================================
+   Octo Code Design System - Organizer Dashboard & Admin Stylesheet
+   ========================================================================== */
+
+.admin-wrapper {
+    display: flex;
+    min-height: 100vh;
+    background-color: var(--octo-bg);
+}
+
+/* Sticky Sidebar (Surface #161B22, 1px solid #30363D border) */
+.admin-sidebar {
+    width: 250px;
+    background-color: var(--octo-surface);
+    color: var(--octo-text-primary);
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    z-index: 1000;
+    border-right: 1px solid var(--octo-border);
+}
+
+.sidebar-brand {
+    height: 64px;
+    padding: 0 16px;
+    font-size: 15px;
+    font-weight: 600;
+    font-family: var(--font-display);
+    color: var(--octo-text-primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 1px solid var(--octo-border);
+}
+
+.sidebar-brand .brand-badge {
+    background: var(--octo-surface-hover);
+    color: var(--octo-primary);
+    border: 1px solid var(--octo-border);
+    padding: 4px 8px;
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sidebar-nav {
+    padding: 16px 8px;
+    list-style: none;
+    margin: 0;
+    flex-grow: 1;
+    overflow-y: auto;
+}
+
+.sidebar-section-title {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--octo-neutral);
+    padding: 12px 10px 4px;
+}
+
+.sidebar-item {
+    margin-bottom: 2px;
+}
+
+.sidebar-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 10px;
+    color: var(--octo-neutral);
+    text-decoration: none !important;
+    font-weight: 500;
+    font-size: 13px;
+    border-radius: var(--radius-sm);
+    border-left: 2px solid transparent;
+    transition: var(--octo-transition);
+}
+
+.sidebar-link i {
+    font-size: 16px;
+    width: 20px;
+    text-align: center;
+    color: var(--octo-neutral);
+}
+
+.sidebar-link:hover {
+    color: var(--octo-text-primary);
+    background-color: var(--octo-surface-hover);
+}
+
+.sidebar-link:hover i {
+    color: var(--octo-text-primary);
+}
+
+/* Active sidebar item gets #21262D background and 2px #F78166 orange indicator */
+.sidebar-link.active {
+    color: var(--octo-text-primary);
+    background-color: var(--octo-modal);
+    border-left: 2px solid var(--octo-accent-orange);
+    font-weight: 600;
+}
+
+.sidebar-link.active i {
+    color: var(--octo-accent-orange);
+}
+
+.sidebar-footer {
+    padding: 12px 16px;
+    border-top: 1px solid var(--octo-border);
+    background-color: var(--octo-surface);
+}
+
+/* Main Content Area (Void Black #0D1117) */
+.admin-main {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+    background-color: var(--octo-bg);
+}
+
+.admin-header {
+    height: 64px;
+    background-color: var(--octo-surface);
+    border-bottom: 1px solid var(--octo-border);
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 990;
+}
+
+.admin-body {
+    padding: 24px;
+    flex-grow: 1;
+}
+
+/* Stat & Metric Cards (Surface #161B22, 1px solid #30363D border, 6px radius) */
+.stat-card {
+    background-color: var(--octo-surface);
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    border: 1px solid var(--octo-border);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 150ms ease-in-out;
+}
+
+.stat-card:hover {
+    border-color: var(--octo-border-hover);
+}
+
+.stat-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+    border: 1px solid var(--octo-border);
+}
+
+.stat-icon.primary { background: rgba(47, 129, 247, 0.15); color: var(--octo-primary); border-color: rgba(47, 129, 247, 0.3); }
+.stat-icon.success { background: rgba(63, 185, 80, 0.15); color: var(--octo-success); border-color: rgba(63, 185, 80, 0.3); }
+.stat-icon.warning { background: rgba(210, 153, 34, 0.15); color: var(--octo-warning); border-color: rgba(210, 153, 34, 0.3); }
+.stat-icon.info { background: rgba(47, 129, 247, 0.15); color: var(--octo-link); border-color: rgba(47, 129, 247, 0.3); }
+
+.stat-value {
+    font-size: 20px;
+    font-weight: 600;
+    font-family: var(--font-code);
+    color: var(--octo-text-primary);
+    line-height: 1.2;
+    margin-bottom: 2px;
+}
+
+.stat-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--octo-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* Empty State Component */
+.empty-state {
+    text-align: center;
+    padding: 48px 24px;
+    background: var(--octo-surface);
+    border-radius: var(--radius-sm);
+    border: 1px dashed var(--octo-border);
+}
+
+.empty-state-icon {
+    font-size: 32px;
+    color: var(--octo-neutral);
+    margin-bottom: 12px;
+}
+
+/* Responsive sidebar */
+@media (max-width: 991.98px) {
+    .admin-sidebar {
+        position: fixed;
+        left: -250px;
+        transition: left 150ms ease;
+    }
+    
+    .admin-sidebar.show {
+        left: 0;
+    }
+    
+    .admin-body {
+        padding: 16px;
+    }
+    
+    .admin-header {
+        padding: 0 16px;
+    }
+}

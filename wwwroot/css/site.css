@@ -1,0 +1,816 @@
+/* ==========================================================================
+   Octo Code Design System - Global Stylesheet
+   Developer-centric, dark-mode-first aesthetic inspired by world-class code collaboration platforms.
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+:root {
+    /* Octo Code Color Palette */
+    --octo-primary: #2F81F7;           /* Mona Blue - interactive elements, links, active */
+    --octo-primary-hover: #388BFD;     /* Hovered links and buttons */
+    --octo-secondary: #238636;         /* Growth Green - merge/primary action buttons, additions */
+    --octo-secondary-hover: #2ea043;   /* Secondary hover */
+    --octo-neutral: #8B949E;           /* Secondary text, icons, timestamps */
+    --octo-bg: #0D1117;                /* Void Black - page foundation canvas */
+    --octo-surface: #161B22;           /* Surface - cards, panels, sidebar backgrounds */
+    --octo-surface-hover: #1C2128;     /* Popovers, dropdowns, hovered rows */
+    --octo-modal: #21262D;             /* Modals, elevated dialogs */
+    --octo-text-primary: #E6EDF3;      /* Primary text, headings, code content */
+    --octo-text-secondary: #8B949E;    /* Descriptions, meta info, secondary labels */
+    --octo-border: #30363D;            /* Dividers, card borders, table rules */
+    --octo-border-hover: #484F58;      /* Hovered borders */
+    --octo-success: #3FB950;           /* Successful checks, online, going */
+    --octo-warning: #D29922;           /* Pending, maybe, caution alerts */
+    --octo-error: #F85149;             /* Failed checks, destructive actions, not going */
+    --octo-accent-orange: #F78166;     /* Active tab indicator, selected row accent */
+    --octo-link: #58A6FF;              /* Hyperlink text */
+
+    /* Typography */
+    --font-display: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    --font-code: 'JetBrains Mono', SFMono-Regular, Consolas, 'Liberation Mono', Menlo, monospace;
+
+    /* Border Radii */
+    --radius-xs: 3px;    /* Checkboxes, small badges, inline code snippets */
+    --radius-sm: 6px;    /* Buttons, inputs, cards, dropdowns, modals */
+    --radius-md: 12px;   /* Avatars, promotional cards */
+    --radius-lg: 20px;   /* Hero containers */
+    --radius-pill: 9999px; /* Pills, label chips, topic tags, counters */
+
+    /* Spacing Scale (Base: 4px) */
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 16px;
+    --space-6: 24px;
+    --space-8: 32px;
+    --space-10: 40px;
+    --space-12: 48px;
+    --space-16: 64px;
+
+    /* Elevation Shadow (Minimal & Flat - Depth comes from color layering) */
+    --octo-shadow: 0 1px 0 rgba(27, 31, 36, 0.04);
+    --octo-modal-backdrop: rgba(1, 4, 9, 0.8);
+
+    /* Animation Duration */
+    --octo-transition: all 150ms ease-in-out;
+}
+
+/* ==========================================================================
+   Global Reset & Base Canvas
+   ========================================================================== */
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.5;
+    color: var(--octo-text-primary);
+    background-color: var(--octo-bg);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Headings: 600 weight, -0.02em letter spacing, tight engineered feel */
+h1, h2, h3, h4, h5, h6,
+.h1, .h2, .h3, .h4, .h5, .h6,
+.brand-font {
+    font-family: var(--font-display);
+    font-weight: 600 !important;
+    letter-spacing: -0.02em;
+    color: var(--octo-text-primary);
+    margin-top: 0;
+}
+
+h1, .h1, .display-4 { font-size: 32px; line-height: 1.25; }
+h2, .h2 { font-size: 24px; line-height: 1.3; }
+h3, .h3 { font-size: 20px; line-height: 1.35; }
+h4, .h4 { font-size: 16px; line-height: 1.4; }
+h5, .h5 { font-size: 14px; line-height: 1.45; }
+h6, .h6 { font-size: 12px; line-height: 1.5; }
+
+/* Links */
+a {
+    color: var(--octo-link);
+    text-decoration: none;
+    transition: var(--octo-transition);
+}
+
+a:hover {
+    color: var(--octo-primary-hover);
+    text-decoration: underline;
+}
+
+/* Typography scale utilities */
+.text-meta, small, .small {
+    font-size: 12px !important;
+    color: var(--octo-text-secondary);
+}
+
+.text-muted {
+    color: var(--octo-text-secondary) !important;
+}
+
+.text-dark {
+    color: var(--octo-text-primary) !important;
+}
+
+/* JetBrains Mono Code & Monospace Elements */
+code, kbd, pre, samp, .font-mono, .code-text, .mono-data {
+    font-family: var(--font-code) !important;
+    font-size: 12px;
+    font-feature-settings: "liga" on, "calt" on;
+}
+
+code {
+    background-color: rgba(110, 118, 129, 0.2);
+    color: var(--octo-text-primary);
+    padding: 0.15em 0.4em;
+    border-radius: var(--radius-xs);
+    border: 1px solid rgba(240, 246, 252, 0.1);
+}
+
+kbd {
+    background-color: var(--octo-surface-hover);
+    color: var(--octo-text-secondary);
+    border: 1px solid var(--octo-border);
+    border-radius: var(--radius-xs);
+    box-shadow: inset 0 -1px 0 var(--octo-border);
+    font-size: 11px;
+    padding: 2px 6px;
+    display: inline-block;
+    line-height: 10px;
+}
+
+/* ==========================================================================
+   Navigation (64px height, Surface #161B22, Underline Tabs)
+   ========================================================================== */
+.navbar-custom {
+    background: var(--octo-surface) !important;
+    border-bottom: 1px solid var(--octo-border);
+    height: 64px;
+    padding: 0 16px;
+    z-index: 1020;
+}
+
+.navbar-brand {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 16px;
+    color: var(--octo-text-primary) !important;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+}
+
+.navbar-brand .brand-badge {
+    background: var(--octo-surface-hover);
+    color: var(--octo-primary);
+    border: 1px solid var(--octo-border);
+    padding: 4px 8px;
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.nav-link {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--octo-text-secondary) !important;
+    padding: 8px 16px !important;
+    border-radius: var(--radius-sm);
+    transition: var(--octo-transition);
+}
+
+.nav-link:hover {
+    color: var(--octo-text-primary) !important;
+    background-color: var(--octo-surface-hover);
+    text-decoration: none;
+}
+
+/* Tab Navigation (Underline-style with #F78166 orange accent) */
+.nav-tabs, .tab-nav, .nav-pills-octo {
+    display: flex;
+    gap: 8px;
+    border-bottom: 1px solid var(--octo-border);
+    list-style: none;
+    padding-left: 0;
+    margin-bottom: 24px;
+}
+
+.nav-tabs .nav-link, .nav-pills-octo .nav-link {
+    border: none;
+    border-radius: 0;
+    border-bottom: 2px solid transparent;
+    color: var(--octo-text-secondary) !important;
+    padding: 8px 16px !important;
+    background: transparent !important;
+    font-weight: 500;
+}
+
+.nav-tabs .nav-link:hover, .nav-pills-octo .nav-link:hover {
+    color: var(--octo-text-primary) !important;
+    border-bottom-color: var(--octo-border-hover);
+}
+
+.nav-tabs .nav-link.active, .nav-pills-octo .nav-link.active {
+    color: var(--octo-text-primary) !important;
+    border-bottom: 2px solid var(--octo-accent-orange) !important;
+    font-weight: 600;
+    background: transparent !important;
+}
+
+/* Search bar with / keyboard shortcut hint badge */
+.octo-search-container {
+    position: relative;
+    max-width: 320px;
+    width: 100%;
+}
+
+.octo-search-input {
+    background-color: var(--octo-bg) !important;
+    border: 1px solid var(--octo-border) !important;
+    border-radius: var(--radius-sm) !important;
+    color: var(--octo-text-primary) !important;
+    font-size: 14px;
+    height: 32px;
+    padding: 4px 34px 4px 12px;
+    width: 100%;
+    transition: var(--octo-transition);
+}
+
+.octo-search-input:focus {
+    outline: 2px solid var(--octo-primary) !important;
+    outline-offset: -1px;
+    border-color: var(--octo-primary) !important;
+    background-color: var(--octo-bg) !important;
+    box-shadow: none !important;
+}
+
+.octo-search-input::placeholder {
+    color: #484F58 !important;
+}
+
+.octo-search-kbd {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+}
+
+/* ==========================================================================
+   Buttons (32px default, 28px small, 6px radius, max 600 weight)
+   ========================================================================== */
+.btn {
+    font-family: var(--font-display);
+    font-size: 14px;
+    font-weight: 500;
+    height: 32px;
+    line-height: 20px;
+    padding: 5px 16px;
+    border-radius: var(--radius-sm);
+    border: 1px solid transparent;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    white-space: nowrap;
+    transition: var(--octo-transition);
+    cursor: pointer;
+    text-decoration: none !important;
+}
+
+.btn-sm {
+    font-size: 12px;
+    height: 28px;
+    line-height: 18px;
+    padding: 3px 12px;
+}
+
+/* Primary Button: Growth Green #238636 */
+.btn-primary, .btn-primary-gradient, .btn-success {
+    background-color: var(--octo-secondary) !important;
+    color: #FFFFFF !important;
+    border: 1px solid rgba(240, 246, 252, 0.1) !important;
+    box-shadow: none !important;
+}
+
+.btn-primary:hover, .btn-primary-gradient:hover, .btn-success:hover {
+    background-color: var(--octo-secondary-hover) !important;
+    border-color: rgba(240, 246, 252, 0.1) !important;
+    color: #FFFFFF !important;
+}
+
+/* Interactive / Mona Blue Button */
+.btn-blue, .btn-interactive, .btn-info {
+    background-color: var(--octo-primary) !important;
+    color: #FFFFFF !important;
+    border: 1px solid rgba(240, 246, 252, 0.1) !important;
+}
+
+.btn-blue:hover, .btn-interactive:hover, .btn-info:hover {
+    background-color: var(--octo-primary-hover) !important;
+    color: #FFFFFF !important;
+}
+
+/* Outline / Secondary Button */
+.btn-outline-custom, .btn-outline-secondary, .btn-light, .btn-secondary {
+    background-color: transparent !important;
+    border: 1px solid var(--octo-border) !important;
+    color: #C9D1D9 !important;
+}
+
+.btn-outline-custom:hover, .btn-outline-secondary:hover, .btn-light:hover, .btn-secondary:hover {
+    background-color: var(--octo-surface-hover) !important;
+    border-color: var(--octo-border-hover) !important;
+    color: #FFFFFF !important;
+}
+
+/* Danger Button: Transparent with #F85149 text, bordered */
+.btn-danger, .btn-outline-danger {
+    background-color: transparent !important;
+    border: 1px solid var(--octo-border) !important;
+    color: var(--octo-error) !important;
+}
+
+.btn-danger:hover, .btn-outline-danger:hover {
+    background-color: rgba(248, 81, 73, 0.15) !important;
+    border-color: var(--octo-error) !important;
+    color: var(--octo-error) !important;
+}
+
+/* ==========================================================================
+   Cards (Surface #161B22, 1px solid #30363D, 6px radius, 16px padding)
+   ========================================================================== */
+.card, .card-modern {
+    background-color: var(--octo-surface) !important;
+    border: 1px solid var(--octo-border) !important;
+    border-radius: var(--radius-sm) !important;
+    padding: 16px;
+    color: var(--octo-text-primary);
+    box-shadow: none !important;
+    transition: border-color 150ms ease-in-out;
+}
+
+.card-modern:hover, .card-lift:hover {
+    border-color: var(--octo-border-hover) !important;
+    transform: none !important;
+}
+
+.card-header {
+    background-color: var(--octo-surface) !important;
+    border-bottom: 1px solid var(--octo-border) !important;
+    padding: 12px 16px;
+    font-weight: 600;
+}
+
+.card-footer {
+    background-color: var(--octo-surface) !important;
+    border-top: 1px solid var(--octo-border) !important;
+    padding: 12px 16px;
+}
+
+/* ==========================================================================
+   Inputs & Form Controls (#0D1117 background, #30363D border, 6px radius)
+   ========================================================================== */
+.form-control, .form-select {
+    background-color: var(--octo-bg) !important;
+    border: 1px solid var(--octo-border) !important;
+    border-radius: var(--radius-sm) !important;
+    padding: 8px 12px;
+    font-size: 14px;
+    color: var(--octo-text-primary) !important;
+    transition: var(--octo-transition);
+}
+
+.form-control:focus, .form-select:focus {
+    outline: 2px solid var(--octo-primary) !important;
+    outline-offset: -1px;
+    border-color: var(--octo-primary) !important;
+    background-color: var(--octo-bg) !important;
+    color: var(--octo-text-primary) !important;
+    box-shadow: none !important;
+}
+
+.form-control::placeholder {
+    color: #484F58 !important;
+}
+
+.form-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--octo-text-primary);
+    margin-bottom: 6px;
+}
+
+.input-group-text {
+    background-color: var(--octo-surface) !important;
+    border: 1px solid var(--octo-border) !important;
+    color: var(--octo-text-secondary) !important;
+    border-radius: var(--radius-sm);
+}
+
+/* Octo Checkbox: 16x16px, #0D1117 bg, #30363D border, 3px radius */
+.form-check-input {
+    width: 16px !important;
+    height: 16px !important;
+    background-color: var(--octo-bg) !important;
+    border: 1px solid var(--octo-border) !important;
+    border-radius: var(--radius-xs) !important;
+    margin-top: 0.25em;
+    cursor: pointer;
+    transition: var(--octo-transition);
+}
+
+.form-check-input:checked {
+    background-color: var(--octo-primary) !important;
+    border-color: var(--octo-primary) !important;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='m6 10 3 3 6-6'/%3e%3c/svg%3e") !important;
+}
+
+.form-check-input:focus {
+    box-shadow: 0 0 0 2px rgba(47, 129, 247, 0.4) !important;
+    border-color: var(--octo-primary) !important;
+}
+
+.form-check-label {
+    font-size: 14px;
+    color: var(--octo-text-primary);
+    cursor: pointer;
+}
+
+/* ==========================================================================
+   Chips, Labels & Badges (24px height, 12px px, 9999px radius, 12px font)
+   ========================================================================== */
+.badge, .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    height: 24px;
+    padding: 0 12px;
+    border-radius: var(--radius-pill);
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    font-family: var(--font-body);
+    line-height: 24px;
+    white-space: nowrap;
+}
+
+/* Success / Going / Merged / Checked In */
+.badge-going, .badge-success, .badge.bg-success, .badge.bg-success-subtle {
+    background-color: rgba(63, 185, 80, 0.2) !important;
+    color: var(--octo-success) !important;
+    border: 1px solid rgba(63, 185, 80, 0.35) !important;
+}
+
+/* Warning / Maybe / Pending */
+.badge-maybe, .badge-warning, .badge.bg-warning, .badge.bg-warning-subtle {
+    background-color: rgba(210, 153, 34, 0.2) !important;
+    color: var(--octo-warning) !important;
+    border: 1px solid rgba(210, 153, 34, 0.35) !important;
+}
+
+/* Error / Not Going / Cancelled / Closed */
+.badge-notgoing, .badge-danger, .badge.bg-danger, .badge.bg-danger-subtle {
+    background-color: rgba(248, 81, 73, 0.2) !important;
+    color: var(--octo-error) !important;
+    border: 1px solid rgba(248, 81, 73, 0.35) !important;
+}
+
+/* Primary / Checked In / Info / Topic */
+.badge-checkedin, .badge-primary, .badge.bg-primary, .badge.bg-primary-subtle, .badge.bg-info {
+    background-color: rgba(47, 129, 247, 0.2) !important;
+    color: var(--octo-link) !important;
+    border: 1px solid rgba(47, 129, 247, 0.35) !important;
+}
+
+/* Neutral Topic Chip */
+.badge-neutral, .badge.bg-light, .badge.bg-secondary, .badge.bg-secondary-subtle {
+    background-color: var(--octo-surface-hover) !important;
+    color: var(--octo-text-secondary) !important;
+    border: 1px solid var(--octo-border) !important;
+}
+
+/* ==========================================================================
+   Lists & Tables (Full-width rows, 8px 16px padding, #30363D bottom border)
+   ========================================================================== */
+.table, .table-custom {
+    width: 100%;
+    margin-bottom: 0;
+    color: var(--octo-text-primary) !important;
+    border-collapse: collapse;
+    background-color: var(--octo-surface) !important;
+    border: 1px solid var(--octo-border) !important;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+}
+
+.table th, .table-custom th {
+    background-color: var(--octo-surface) !important;
+    color: var(--octo-text-secondary) !important;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 8px 16px;
+    border-bottom: 1px solid var(--octo-border) !important;
+    border-top: none;
+}
+
+.table td, .table-custom td {
+    padding: 8px 16px;
+    vertical-align: middle;
+    border-bottom: 1px solid var(--octo-border) !important;
+    border-top: none;
+    color: var(--octo-text-primary);
+    font-size: 14px;
+    background-color: transparent !important;
+}
+
+.table tbody tr:hover td, .table-custom tbody tr:hover td {
+    background-color: var(--octo-surface-hover) !important;
+}
+
+/* Selected / Active / Checked In Row Accent: 2px left border in #F78166 (orange) */
+.table tbody tr.row-selected td:first-child,
+.table tbody tr.checked-in-row td:first-child {
+    border-left: 2px solid var(--octo-accent-orange) !important;
+}
+
+.table tbody tr.checked-in-row td {
+    background-color: rgba(47, 129, 247, 0.05) !important;
+}
+
+/* List Groups */
+.list-group {
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--octo-border);
+}
+
+.list-group-item {
+    background-color: var(--octo-surface) !important;
+    color: var(--octo-text-primary) !important;
+    border-color: var(--octo-border) !important;
+    padding: 8px 16px;
+    transition: var(--octo-transition);
+}
+
+.list-group-item:hover {
+    background-color: var(--octo-surface-hover) !important;
+}
+
+/* ==========================================================================
+   Modals, Popovers & Tooltips
+   ========================================================================== */
+.modal-backdrop {
+    background-color: var(--octo-modal-backdrop) !important;
+}
+
+.modal-content {
+    background-color: var(--octo-modal) !important;
+    border: 1px solid var(--octo-border) !important;
+    border-radius: var(--radius-sm) !important;
+    color: var(--octo-text-primary);
+}
+
+.modal-header {
+    border-bottom: 1px solid var(--octo-border) !important;
+    padding: 16px;
+}
+
+.modal-footer {
+    border-top: 1px solid var(--octo-border) !important;
+    padding: 16px;
+}
+
+.dropdown-menu {
+    background-color: var(--octo-surface-hover) !important;
+    border: 1px solid var(--octo-border) !important;
+    border-radius: var(--radius-sm) !important;
+    box-shadow: 0 8px 24px rgba(1, 4, 9, 0.4);
+    padding: 4px;
+}
+
+.dropdown-item {
+    color: var(--octo-text-primary) !important;
+    font-size: 14px;
+    padding: 6px 12px;
+    border-radius: var(--radius-sm);
+    transition: var(--octo-transition);
+}
+
+.dropdown-item:hover {
+    background-color: var(--octo-modal) !important;
+    color: #FFFFFF !important;
+}
+
+.dropdown-divider {
+    border-top: 1px solid var(--octo-border) !important;
+    margin: 4px 0;
+}
+
+/* Tooltip (Octo Spec: #21262D background, #C9D1D9 text, 6px radius, 6px 10px padding) */
+.tooltip-inner {
+    background-color: var(--octo-modal) !important;
+    color: #C9D1D9 !important;
+    border-radius: var(--radius-sm) !important;
+    padding: 6px 10px !important;
+    font-size: 12px !important;
+    max-width: 250px !important;
+    border: 1px solid var(--octo-border);
+}
+
+/* ==========================================================================
+   Public Event Banner & Countdown Component
+   ========================================================================== */
+.event-hero-banner {
+    background-color: var(--octo-surface);
+    border: 1px solid var(--octo-border);
+    border-radius: var(--radius-sm);
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+}
+
+.countdown-box {
+    background: var(--octo-surface-hover);
+    border: 1px solid var(--octo-border);
+    border-radius: var(--radius-sm);
+    padding: 8px 12px;
+    text-align: center;
+    min-width: 72px;
+}
+
+.countdown-num {
+    font-size: 20px;
+    font-weight: 600;
+    font-family: var(--font-code);
+    color: var(--octo-text-primary);
+    line-height: 1;
+}
+
+.countdown-lbl {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--octo-text-secondary);
+    margin-top: 4px;
+}
+
+/* ==========================================================================
+   Interactive Status Radio Selector (RSVP Choices)
+   ========================================================================== */
+.status-selector {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+}
+
+.status-option {
+    position: relative;
+}
+
+.status-option input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+}
+
+.status-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 14px 8px;
+    border: 1px solid var(--octo-border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: var(--octo-transition);
+    text-align: center;
+    background: var(--octo-bg);
+    color: var(--octo-text-secondary);
+}
+
+.status-card i {
+    font-size: 1.5rem;
+    margin-bottom: 4px;
+}
+
+.status-card .status-title {
+    font-weight: 600;
+    font-size: 13px;
+}
+
+.status-card:hover {
+    border-color: var(--octo-border-hover);
+    background: var(--octo-surface);
+}
+
+.status-option input[type="radio"]:checked + .status-card.going {
+    border-color: var(--octo-success);
+    background: rgba(63, 185, 80, 0.15);
+    color: var(--octo-success);
+}
+
+.status-option input[type="radio"]:checked + .status-card.maybe {
+    border-color: var(--octo-warning);
+    background: rgba(210, 153, 34, 0.15);
+    color: var(--octo-warning);
+}
+
+.status-option input[type="radio"]:checked + .status-card.notgoing {
+    border-color: var(--octo-error);
+    background: rgba(248, 81, 73, 0.15);
+    color: var(--octo-error);
+}
+
+/* ==========================================================================
+   Hero Section & Clean Home Marketing
+   ========================================================================== */
+.hero-gradient {
+    background-color: var(--octo-bg);
+    border-bottom: 1px solid var(--octo-border);
+    padding: 48px 0;
+}
+
+/* Alert Boxes in Octo Theme */
+.alert {
+    border-radius: var(--radius-sm) !important;
+    border: 1px solid var(--octo-border) !important;
+    padding: 12px 16px;
+    font-size: 14px;
+}
+
+.alert-info {
+    background-color: rgba(47, 129, 247, 0.1) !important;
+    border-color: rgba(47, 129, 247, 0.3) !important;
+    color: #58A6FF !important;
+}
+
+.alert-success {
+    background-color: rgba(63, 185, 80, 0.1) !important;
+    border-color: rgba(63, 185, 80, 0.3) !important;
+    color: #3FB950 !important;
+}
+
+.alert-warning {
+    background-color: rgba(210, 153, 34, 0.1) !important;
+    border-color: rgba(210, 153, 34, 0.3) !important;
+    color: #D29922 !important;
+}
+
+.alert-danger {
+    background-color: rgba(248, 81, 73, 0.1) !important;
+    border-color: rgba(248, 81, 73, 0.3) !important;
+    color: #F85149 !important;
+}
+
+/* Progress bar */
+.progress {
+    background-color: var(--octo-surface-hover) !important;
+    border-radius: var(--radius-xs) !important;
+    overflow: hidden;
+}
+
+.progress-bar {
+    background-color: var(--octo-secondary) !important;
+}
+
+/* Footer (Surface #161B22, 1px border #30363D) */
+footer {
+    margin-top: auto;
+    background-color: var(--octo-surface) !important;
+    border-top: 1px solid var(--octo-border) !important;
+    padding: 24px 0;
+    color: var(--octo-text-secondary);
+    font-size: 12px;
+}
+
+/* Toast Container */
+.toast-container {
+    z-index: 1090;
+}
+
+.toast {
+    background-color: var(--octo-modal) !important;
+    border: 1px solid var(--octo-border) !important;
+    color: var(--octo-text-primary) !important;
+    border-radius: var(--radius-sm);
+}
+
+.toast-header {
+    background-color: var(--octo-surface) !important;
+    border-bottom: 1px solid var(--octo-border) !important;
+    color: var(--octo-text-primary) !important;
+}

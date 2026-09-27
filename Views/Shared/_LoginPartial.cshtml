@@ -1,0 +1,37 @@
+@using Microsoft.AspNetCore.Identity
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+
+<ul class="navbar-nav align-items-center gap-2">
+@if (SignInManager.IsSignedIn(User))
+{
+    <li class="nav-item">
+        <a class="nav-link d-flex align-items-center gap-2 py-1" asp-controller="Dashboard" asp-action="Index">
+            <span class="rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 24px; height: 24px; background: var(--octo-surface-hover); border: 1px solid var(--octo-border); color: var(--octo-link);">
+                <i class="bi bi-person-fill" style="font-size: 12px;"></i>
+            </span>
+            <span class="font-mono text-muted">@User.Identity?.Name</span>
+        </a>
+    </li>
+    <li class="nav-item">
+        <form class="form-inline m-0" asp-controller="Account" asp-action="Logout" method="post">
+            <button type="submit" class="btn btn-danger btn-sm">
+                <i class="bi bi-box-arrow-right"></i> Sign Out
+            </button>
+        </form>
+    </li>
+}
+else
+{
+    <li class="nav-item">
+        <a class="btn btn-outline-custom btn-sm" asp-controller="Account" asp-action="Login">
+            <i class="bi bi-box-arrow-in-right"></i> Log In
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="btn btn-primary btn-sm" asp-controller="Account" asp-action="Register">
+            Sign Up
+        </a>
+    </li>
+}
+</ul>

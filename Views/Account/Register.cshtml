@@ -1,0 +1,61 @@
+@model EventEase.ViewModels.Account.RegisterViewModel
+@{
+    ViewData["Title"] = "Create Organizer Account";
+}
+
+<div class="container-fluid px-lg-5 py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5 col-xl-4">
+            <div class="card card-modern p-4">
+                <div class="text-center mb-4">
+                    <span class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3" style="width: 56px; height: 56px; background: rgba(35, 134, 54, 0.15); border: 1px solid rgba(35, 134, 54, 0.3); color: var(--octo-secondary);">
+                        <i class="bi bi-person-plus-fill fs-4"></i>
+                    </span>
+                    <h3 class="fw-semibold">Create Account</h3>
+                    <p class="text-muted small font-mono">Register as an event organizer to host and manage events</p>
+                </div>
+
+                <form asp-action="Register" method="post" novalidate>
+                    <div asp-validation-summary="ModelOnly" class="text-danger small mb-3"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="FullName" class="form-label small font-mono">Full Name</label>
+                        <input asp-for="FullName" class="form-control" placeholder="e.g. John Doe" />
+                        <span asp-validation-for="FullName" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Email" class="form-label small font-mono">Email Address</label>
+                        <input asp-for="Email" class="form-control" placeholder="name@example.com" />
+                        <span asp-validation-for="Email" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Password" class="form-label small font-mono">Password (min. 6 characters)</label>
+                        <input asp-for="Password" class="form-control" placeholder="••••••••" />
+                        <span asp-validation-for="Password" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-4">
+                        <label asp-for="ConfirmPassword" class="form-label small font-mono">Confirm Password</label>
+                        <input asp-for="ConfirmPassword" class="form-control" placeholder="••••••••" />
+                        <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold" style="height: 40px;">
+                        <i class="bi bi-person-check me-1"></i> Register as Organizer
+                    </button>
+                </form>
+
+                <div class="text-center mt-4 pt-3 border-top small text-muted" style="border-color: var(--octo-border) !important;">
+                    Already have an account?
+                    <a asp-action="Login" class="fw-semibold ms-1" style="color: var(--octo-link);">Sign in here</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

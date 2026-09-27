@@ -1,0 +1,207 @@
+@model EventEase.ViewModels.Attendance.AttendanceCheckInViewModel
+@{
+    ViewData["Title"] = "Event Check-In: " + Model.EventTitle;
+    Layout = "_AdminLayout";
+}
+
+<!-- Event Day Check-In Header -->
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+    <div>
+        <a asp-controller="Events" asp-action="Details" asp-route-id="@Model.EventId" class="text-muted small font-mono">
+            <i class="bi bi-arrow-left me-1"></i> Back to Event
+        </a>
+        <div class="d-flex align-items-center gap-2 mt-1">
+            <h3 class="fw-semibold mb-0">Live Check-In Roster</h3>
+            <span class="badge badge-going font-mono"><i class="bi bi-broadcast me-1"></i> live_stream</span>
+        </div>
+        <p class="text-muted small mb-0 mt-1 font-mono">
+            <strong style="color: var(--octo-text-primary);">@Model.EventTitle</strong> &bull; 
+            <i class="bi bi-calendar-event me-1"></i> @Model.EventDate.ToString("yyyy-MM-dd") &bull; 
+            <i class="bi bi-clock me-1"></i> @Model.EventTime &bull; 
+            <i class="bi bi-geo-alt me-1"></i> @Model.Venue
+        </p>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-controller="Events" asp-action="ExportCsv" asp-route-id="@Model.EventId" class="btn btn-outline-custom">
+            <i class="bi bi-download me-1"></i> Export CSV
+        </a>
+        <a asp-controller="Events" asp-action="Details" asp-route-id="@Model.EventId" class="btn btn-outline-custom">
+            <i class="bi bi-sliders me-1"></i> Settings
+        </a>
+    </div>
+</div>
+
+<!-- Real-time Attendance Statistics Banner -->
+<div class="card card-modern p-4 mb-4">
+    <div class="row g-4 align-items-center">
+        <div class="col-md-3 border-end" style="border-color: var(--octo-border) !important;">
+            <div class="text-muted small font-mono text-uppercase">Confirmed Going</div>
+            <div class="fs-2 fw-semibold font-mono mt-1" id="statTotalGoing" style="color: var(--octo-text-primary);">@Model.TotalGoing</div>
+            <small class="text-muted font-mono" style="font-size: 11px;">Out of @Model.TotalRSVPs total RSVPs</small>
+        </div>
+
+        <div class="col-md-3 border-end" style="border-color: var(--octo-border) !important;">
+            <div class="text-muted small font-mono text-uppercase">Recorded Check-In</div>
+            <div class="fs-2 fw-semibold font-mono mt-1" id="statTotalCheckedIn" style="color: var(--octo-success);">@Model.TotalCheckedIn</div>
+            <small class="text-muted font-mono" style="font-size: 11px;">Attendees verified on-site</small>
+        </div>
+
+        <div class="col-md-6">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+                <span class="text-muted small font-mono text-uppercase">Turnout Rate</span>
+                <span class="fs-4 fw-bold font-mono" id="statAttendancePercent" style="color: var(--octo-link);">@Model.AttendancePercentage%</span>
+            </div>
+            <div class="progress" style="height: 8px;">
+                <div class="progress-bar" 
+                     id="statProgressBar" role="progressbar" 
+                     style="width: @Model.AttendancePercentage%" 
+                     aria-valuenow="@Model.AttendancePercentage" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+            <div class="d-flex justify-content-between mt-1 text-muted small font-mono" style="font-size: 11px;">
+                <span>0%</span>
+                <span>Target: 100% Turnout</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Search, Filter & Live Table Controls -->
+<div class="card card-modern p-3 mb-4">
+    <div class="row g-3 align-items-center">
+        <div class="col-md-6">
+            <div class="octo-search-container" style="max-width: 100%;">
+                <input type="text" id="attendeeSearchInput" class="octo-search-input" 
+                       placeholder="Filter by attendee name or email..." />
+                <kbd class="octo-search-kbd">/</kbd>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <select id="attendeeStatusFilter" class="form-select font-mono">
+                <option value="All">All Attendees (@Model.Attendees.Count)</option>
+                <option value="CheckedIn">Checked In Only</option>
+                <option value="NotCheckedIn">Pending Check-In Only</option>
+                <option value="Going">RSVP: Going</option>
+                <option value="Maybe">RSVP: Maybe</option>
+                <option value="Not Going">RSVP: Not Going</option>
+            </select>
+        </div>
+        <div class="col-md-3 text-md-end text-muted small font-mono">
+            Showing <strong id="visibleAttendeeCount" style="color: var(--octo-text-primary);">@Model.Attendees.Count</strong> attendees
+        </div>
+    </div>
+</div>
+
+<!-- Interactive Attendee Roster Table -->
+<div class="card card-modern p-0 overflow-hidden mb-5">
+    <div class="table-responsive">
+        <table class="table table-custom mb-0" id="attendeeRosterTable">
+            <thead>
+                <tr>
+                    <th style="width: 250px;">Attendee</th>
+                    <th>RSVP Status</th>
+                    <th>Custom Fields</th>
+                    <th>Check-In Status</th>
+                    <th>Timestamp</th>
+                    <th style="width: 130px; text-align: center;">Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var att in Model.Attendees)
+                {
+                    <tr class="attendee-row @(att.CheckedIn ? "checked-in-row" : "")" 
+                        id="attendee-row-@att.RsvpId"
+                        data-name="@att.FullName" 
+                        data-email="@att.Email" 
+                        data-rsvp-status="@att.Status" 
+                        data-checked-in="@(att.CheckedIn ? "true" : "false")">
+                        <td>
+                            <div class="fw-semibold" style="color: var(--octo-text-primary);">@att.FullName</div>
+                            <div class="small font-mono" style="color: var(--octo-link);">@att.Email</div>
+                            @if (!string.IsNullOrEmpty(att.Phone))
+                            {
+                                <div class="small font-mono text-muted">@att.Phone</div>
+                            }
+                        </td>
+                        <td>
+                            @if (att.Status == "Going")
+                            {
+                                <span class="badge badge-going font-mono">going</span>
+                            }
+                            else if (att.Status == "Maybe")
+                            {
+                                <span class="badge badge-maybe font-mono">maybe</span>
+                            }
+                            else
+                            {
+                                <span class="badge badge-notgoing font-mono">not_going</span>
+                            }
+                        </td>
+                        <td>
+                            @if (att.CustomAnswers.Any())
+                            {
+                                <div class="small font-mono">
+                                    @foreach (var answer in att.CustomAnswers)
+                                    {
+                                        <div><span class="text-muted">@answer.Key:</span> <span>@answer.Value</span></div>
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                <span class="text-muted small font-mono">—</span>
+                            }
+                        </td>
+                        <td>
+                            @if (att.CheckedIn)
+                            {
+                                <span class="badge badge-checkedin font-mono checkin-status-badge">
+                                    <i class="bi bi-check-circle-fill me-1"></i> checked_in
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge badge-neutral font-mono checkin-status-badge">
+                                    <i class="bi bi-clock me-1"></i> pending
+                                </span>
+                            }
+                        </td>
+                        <td>
+                            <span class="small font-mono text-muted checkin-time-text">
+                                @(string.IsNullOrEmpty(att.FormattedCheckInTime) ? "—" : att.FormattedCheckInTime)
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            @if (att.CheckedIn)
+                            {
+                                <button type="button" class="btn btn-sm btn-outline-custom btn-toggle-checkin" 
+                                        data-rsvp-id="@att.RsvpId" data-undo="true">
+                                    <i class="bi bi-arrow-counterclockwise"></i> Undo
+                                </button>
+                            }
+                            else
+                            {
+                                <button type="button" class="btn btn-sm btn-primary btn-toggle-checkin" 
+                                        data-rsvp-id="@att.RsvpId" data-undo="false">
+                                    <i class="bi bi-check2"></i> Check In
+                                </button>
+                            }
+                        </td>
+                    </tr>
+                }
+
+                <!-- Empty match row for search filter -->
+                <tr id="noAttendeesMatchRow" style="display: none;">
+                    <td colspan="6" class="text-center py-5 text-muted">
+                        <i class="bi bi-person-x fs-3 d-block mb-2 text-muted"></i>
+                        <h6 class="fw-semibold">No attendees match your query</h6>
+                        <p class="small font-mono mb-0">Try changing keywords or resetting the status dropdown.</p>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/attendance.js" asp-append-version="true"></script>
+}

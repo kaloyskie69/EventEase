@@ -1,0 +1,162 @@
+@model EventEase.ViewModels.Event.EventEditViewModel
+@{
+    ViewData["Title"] = "Edit Event: " + Model.Title;
+    Layout = "_AdminLayout";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-10">
+        <div class="d-flex align-items-center justify-content-between mb-4">
+            <div>
+                <a asp-action="Details" asp-route-id="@Model.Id" class="text-muted small font-mono">
+                    <i class="bi bi-arrow-left me-1"></i> Back to Event Details
+                </a>
+                <h3 class="fw-semibold mt-1 mb-0">Edit Event Settings</h3>
+            </div>
+            <div>
+                <form asp-action="Cancel" asp-route-id="@Model.Id" method="post" class="d-inline" onsubmit="return confirm('Are you sure you want to mark this event as Cancelled?');">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-outline-custom btn-sm text-warning">
+                        <i class="bi bi-x-circle me-1"></i> Cancel Event
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <form asp-action="Edit" method="post" id="eventEditForm" novalidate>
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="Id" />
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-4"></div>
+
+            <!-- Primary Event Details Card -->
+            <div class="card card-modern p-4 mb-4">
+                <h5 class="fw-semibold mb-3 pb-2 border-bottom" style="border-color: var(--octo-border) !important;">
+                    <i class="bi bi-pencil-square text-primary me-2"></i> Event Metadata
+                </h5>
+
+                <div class="row g-3">
+                    <div class="col-md-8">
+                        <label asp-for="Title" class="form-label small font-mono">Event Title <span class="text-danger">*</span></label>
+                        <input asp-for="Title" class="form-control" />
+                        <span asp-validation-for="Title" class="text-danger small"></span>
+                    </div>
+
+                    <div class="col-md-4">
+                        <label asp-for="Status" class="form-label small font-mono">Status</label>
+                        <select asp-for="Status" class="form-select font-mono">
+                            <option value="Upcoming">Upcoming</option>
+                            <option value="Completed">Completed</option>
+                            <option value="Cancelled">Cancelled</option>
+                        </select>
+                        <span asp-validation-for="Status" class="text-danger small"></span>
+                    </div>
+
+                    <div class="col-12">
+                        <label asp-for="Description" class="form-label small font-mono">Description</label>
+                        <textarea asp-for="Description" class="form-control" rows="3"></textarea>
+                        <span asp-validation-for="Description" class="text-danger small"></span>
+                    </div>
+
+                    <div class="col-12">
+                        <label asp-for="Venue" class="form-label small font-mono">Venue / Location <span class="text-danger">*</span></label>
+                        <input asp-for="Venue" class="form-control" />
+                        <span asp-validation-for="Venue" class="text-danger small"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="Date" class="form-label small font-mono">Date <span class="text-danger">*</span></label>
+                        <input asp-for="Date" type="date" class="form-control" />
+                        <span asp-validation-for="Date" class="text-danger small"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="Time" class="form-label small font-mono">Time / Schedule <span class="text-danger">*</span></label>
+                        <input asp-for="Time" class="form-control" />
+                        <span asp-validation-for="Time" class="text-danger small"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Custom Questions Builder Card -->
+            <div class="card card-modern p-4 mb-4">
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center pb-2 mb-3 border-bottom gap-2" style="border-color: var(--octo-border) !important;">
+                    <div>
+                        <h5 class="fw-semibold mb-0">
+                            <i class="bi bi-sliders text-secondary me-2"></i> Custom Attendee Questions
+                        </h5>
+                        <p class="text-muted small mb-0 font-mono">Modify embedded questions captured during RSVP submission.</p>
+                    </div>
+                    <button type="button" class="btn btn-outline-custom btn-sm" id="btnAddCustomField">
+                        <i class="bi bi-plus-lg me-1"></i> Add Question Field
+                    </button>
+                </div>
+
+                <div id="customFieldsContainer">
+                    @for (int i = 0; i < Model.CustomFields.Count; i++)
+                    {
+                        var cf = Model.CustomFields[i];
+                        var isDropdown = (cf.FieldType == "Dropdown");
+                        <div class="custom-field-row card p-3 mb-3" data-index="@i">
+                            <div class="row g-2 align-items-center">
+                                <div class="col-auto">
+                                    <span class="badge badge-neutral font-mono field-index-badge">#@(i + 1)</span>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label small text-muted mb-1 font-mono">Question / Label <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control form-control-sm field-label" 
+                                           name="CustomFields[@i].Label" value="@cf.Label" required />
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small text-muted mb-1 font-mono">Type</label>
+                                    <select class="form-select form-select-sm field-type font-mono" name="CustomFields[@i].FieldType">
+                                        <option value="Text" selected="@(cf.FieldType == "Text")">Short Text</option>
+                                        <option value="Dropdown" selected="@(cf.FieldType == "Dropdown")">Dropdown</option>
+                                        <option value="Number" selected="@(cf.FieldType == "Number")">Number</option>
+                                        <option value="Checkbox" selected="@(cf.FieldType == "Checkbox")">Checkbox</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-2 d-flex align-items-center pt-md-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input field-required" type="checkbox" 
+                                               name="CustomFields[@i].Required" id="CustomFields_@(i)__Required" value="true" @(cf.Required ? "checked" : "") />
+                                        <label class="form-check-label small field-required-label font-mono" for="CustomFields_@(i)__Required">Required</label>
+                                    </div>
+                                </div>
+                                <div class="col-md-auto ms-auto pt-md-3">
+                                    <button type="button" class="btn btn-danger btn-sm btn-remove-field" title="Remove question">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="row g-2 mt-2 options-row" style="@(isDropdown ? "display: flex;" : "display: none;")">
+                                <div class="col-md-11 offset-md-1">
+                                    <label class="form-label small text-muted mb-1 font-mono">Dropdown Choices (comma-separated)</label>
+                                    <input type="text" class="form-control form-control-sm field-options" 
+                                           name="CustomFields[@i].Options" value="@cf.Options" placeholder="e.g. Vegetarian, Vegan, Halal, Gluten-Free" />
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <div id="noCustomFieldsNotice" class="text-center py-4 text-muted rounded" style="@(Model.CustomFields.Count == 0 ? "display: block;" : "display: none;") background-color: var(--octo-bg); border: 1px dashed var(--octo-border);">
+                    <i class="bi bi-input-cursor-text fs-4 d-block mb-1 text-muted"></i>
+                    <p class="mb-0 small font-mono">No custom questions configured.</p>
+                </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="d-flex justify-content-end gap-2 mb-5">
+                <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-custom">Cancel</a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-lg me-1"></i> Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/event-form.js" asp-append-version="true"></script>
+}

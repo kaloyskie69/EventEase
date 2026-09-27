@@ -1,0 +1,82 @@
+@model EventEase.ViewModels.RSVP.RSVPConfirmationViewModel
+@{
+    ViewData["Title"] = "RSVP Confirmed - " + Model.EventTitle;
+    Layout = "_Layout";
+}
+
+<div class="container-fluid px-lg-5 py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-7">
+            <div class="card card-modern p-4 text-center">
+                <div class="mb-4">
+                    <span class="d-inline-flex align-items-center justify-content-center rounded-circle" style="width: 72px; height: 72px; background: rgba(63, 185, 80, 0.15); border: 1px solid rgba(63, 185, 80, 0.3); color: var(--octo-success);">
+                        <i class="bi bi-check-circle-fill fs-1"></i>
+                    </span>
+                </div>
+
+                <h2 class="fw-semibold mb-2">RSVP Confirmed</h2>
+                <p class="text-muted mb-4 font-mono small">
+                    Thank you, <strong style="color: var(--octo-text-primary);">@Model.FullName</strong>. Your response has been saved.
+                </p>
+
+                <!-- Event Reminder Card -->
+                <div class="card card-modern p-4 mb-4 text-start">
+                    <div class="d-flex justify-content-between align-items-start mb-3 pb-2 border-bottom" style="border-color: var(--octo-border) !important;">
+                        <div>
+                            <span class="text-muted small font-mono text-uppercase">event_details</span>
+                            <h5 class="fw-semibold mb-0" style="color: var(--octo-link);">@Model.EventTitle</h5>
+                        </div>
+                        <span class="badge font-mono @(Model.Status == "Going" ? "badge-going" : Model.Status == "Maybe" ? "badge-maybe" : "badge-notgoing")">
+                            @Model.Status.ToLower()
+                        </span>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-sm-6">
+                            <div class="text-muted small font-mono"><i class="bi bi-calendar-event me-1"></i> date_time</div>
+                            <div class="fw-semibold font-mono">@Model.EventDate.ToString("yyyy-MM-dd")</div>
+                            <div class="small text-muted font-mono">@Model.EventTime</div>
+                        </div>
+
+                        <div class="col-sm-6">
+                            <div class="text-muted small font-mono"><i class="bi bi-geo-alt me-1"></i> venue</div>
+                            <div class="fw-semibold">@Model.Venue</div>
+                            <div class="small text-muted font-mono">Present your name at check-in</div>
+                        </div>
+
+                        <div class="col-12 pt-2 border-top" style="border-color: var(--octo-border) !important;">
+                            <div class="text-muted small font-mono"><i class="bi bi-envelope me-1"></i> registered_to</div>
+                            <div class="fw-semibold font-mono" style="color: var(--octo-link);">@Model.Email</div>
+                        </div>
+
+                        @if (Model.CustomResponses.Any())
+                        {
+                            <div class="col-12 pt-2 border-top" style="border-color: var(--octo-border) !important;">
+                                <div class="text-muted small font-mono mb-2"><i class="bi bi-sliders me-1"></i> custom_responses:</div>
+                                <div class="p-3 rounded small font-mono" style="background-color: var(--octo-bg); border: 1px solid var(--octo-border);">
+                                    @foreach (var resp in Model.CustomResponses)
+                                    {
+                                        <div class="d-flex justify-content-between py-1">
+                                            <span class="text-muted">@resp.Key:</span>
+                                            <span style="color: var(--octo-text-primary);">@resp.Value</span>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="d-flex flex-wrap justify-content-center gap-2">
+                    <a asp-action="DownloadIcs" asp-route-eventId="@Model.EventId" class="btn btn-primary">
+                        <i class="bi bi-calendar-plus me-1"></i> Add to Calendar (.ics)
+                    </a>
+                    <a asp-action="EventDetails" asp-route-id="@Model.EventId" class="btn btn-outline-custom">
+                        <i class="bi bi-arrow-left me-1"></i> Back to Event
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

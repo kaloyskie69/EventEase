@@ -1,0 +1,235 @@
+@model EventEase.ViewModels.Event.EventDetailsViewModel
+@{
+    ViewData["Title"] = Model.Title;
+    Layout = "_AdminLayout";
+}
+
+<!-- Header & Quick Actions -->
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+    <div>
+        <a asp-action="Index" class="text-muted small font-mono">
+            <i class="bi bi-arrow-left me-1"></i> Back to Events
+        </a>
+        <div class="d-flex align-items-center gap-2 mt-1">
+            <h3 class="fw-semibold mb-0">@Model.Title</h3>
+            @if (Model.Status == "Upcoming")
+            {
+                <span class="badge badge-going font-mono">upcoming</span>
+            }
+            else if (Model.Status == "Completed")
+            {
+                <span class="badge badge-neutral font-mono">completed</span>
+            }
+            else
+            {
+                <span class="badge badge-notgoing font-mono">cancelled</span>
+            }
+        </div>
+        <p class="text-muted small mb-0 mt-1 font-mono">
+            <i class="bi bi-calendar-event me-1"></i> @Model.Date.ToString("yyyy-MM-dd") at @Model.Time 
+            <span class="mx-2">•</span> 
+            <i class="bi bi-geo-alt me-1"></i> @Model.Venue
+        </p>
+    </div>
+
+    <div class="d-flex flex-wrap gap-2">
+        <a asp-controller="Attendance" asp-action="CheckIn" asp-route-eventId="@Model.Id" class="btn btn-primary">
+            <i class="bi bi-qr-code-scan"></i> Check In Roster
+        </a>
+        <a asp-action="ExportCsv" asp-route-id="@Model.Id" class="btn btn-outline-custom">
+            <i class="bi bi-download"></i> Export CSV
+        </a>
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-outline-custom">
+            <i class="bi bi-pencil"></i> Edit
+        </a>
+    </div>
+</div>
+
+<!-- Shareable Public Link Card -->
+<div class="card card-modern p-3 mb-4">
+    <div class="row align-items-center g-3">
+        <div class="col-md-auto">
+            <span class="badge badge-primary p-2" style="width: 36px; height: 36px; justify-content: center;">
+                <i class="bi bi-link-45deg fs-5"></i>
+            </span>
+        </div>
+        <div class="col-md">
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="fw-semibold font-mono small" style="color: var(--octo-link);">public_rsvp_endpoint</span>
+                <span class="badge badge-neutral font-mono" style="font-size: 10px;">no-auth-required</span>
+            </div>
+            <div class="input-group">
+                <input type="text" class="form-control font-mono small" id="publicShareUrlInput" value="@Model.PublicUrl" readonly />
+                <button type="button" class="btn btn-outline-custom" onclick="copyShareLink('publicShareUrlInput')">
+                    <i class="bi bi-clipboard"></i> Copy
+                </button>
+                <a href="@Model.PublicUrl" target="_blank" class="btn btn-outline-custom">
+                    <i class="bi bi-box-arrow-up-right"></i> Open
+                </a>
+            </div>
+            <small class="text-muted mt-1 d-block font-mono" style="font-size: 11px;">
+                Anyone with this link can RSVP directly without registering or logging in.
+            </small>
+        </div>
+    </div>
+</div>
+
+<!-- Key Event Metrics -->
+<div class="row g-2 mb-4">
+    <div class="col-6 col-lg-3">
+        <div class="stat-card">
+            <div class="stat-icon primary">
+                <i class="bi bi-envelope-paper"></i>
+            </div>
+            <div>
+                <div class="stat-value">@Model.TotalRSVPs</div>
+                <div class="stat-label">Total RSVPs</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-6 col-lg-3">
+        <div class="stat-card">
+            <div class="stat-icon success">
+                <i class="bi bi-person-check"></i>
+            </div>
+            <div>
+                <div class="stat-value" style="color: var(--octo-success);">@Model.GoingCount</div>
+                <div class="stat-label">Confirmed Going</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-6 col-lg-3">
+        <div class="stat-card">
+            <div class="stat-icon info">
+                <i class="bi bi-qr-code-scan"></i>
+            </div>
+            <div>
+                <div class="stat-value" style="color: var(--octo-link);">@Model.CheckedInCount</div>
+                <div class="stat-label">Checked In</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-6 col-lg-3">
+        <div class="stat-card">
+            <div class="stat-icon success">
+                <i class="bi bi-pie-chart-fill"></i>
+            </div>
+            <div>
+                <div class="stat-value" style="color: var(--octo-success);">@Model.AttendancePercentage%</div>
+                <div class="stat-label">Turnout Rate</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Custom Questions & Attendees Roster Tabs -->
+<div class="card card-modern p-4 mb-4">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-3 pb-2 border-bottom gap-2" style="border-color: var(--octo-border) !important;">
+        <div>
+            <h5 class="fw-semibold mb-0">Attendee RSVPs & Responses</h5>
+            <small class="text-muted font-mono">Showing all @Model.Attendees.Count submitted responses</small>
+        </div>
+        @if (Model.CustomFields.Any())
+        {
+            <div class="d-flex align-items-center gap-1 flex-wrap">
+                <span class="small font-mono text-muted me-1">Custom Fields:</span>
+                @foreach (var cf in Model.CustomFields)
+                {
+                    <span class="badge badge-neutral font-mono">@cf.Label</span>
+                }
+            </div>
+        }
+    </div>
+
+    @if (Model.Attendees.Any())
+    {
+        <div class="table-responsive">
+            <table class="table table-custom mb-0">
+                <thead>
+                    <tr>
+                        <th>Attendee</th>
+                        <th>Contact</th>
+                        <th>RSVP</th>
+                        <th>Check-in</th>
+                        @foreach (var cf in Model.CustomFields)
+                        {
+                            <th>@cf.Label</th>
+                        }
+                        <th>Submitted</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var att in Model.Attendees)
+                    {
+                        <tr class="@(att.CheckedIn ? "checked-in-row" : "")">
+                            <td>
+                                <div class="fw-semibold" style="color: var(--octo-text-primary);">@att.FullName</div>
+                            </td>
+                            <td>
+                                <div class="font-mono small" style="color: var(--octo-link);">@att.Email</div>
+                                @if (!string.IsNullOrEmpty(att.Phone))
+                                {
+                                    <div class="font-mono small text-muted">@att.Phone</div>
+                                }
+                            </td>
+                            <td>
+                                @if (att.Status == "Going")
+                                {
+                                    <span class="badge badge-going font-mono">going</span>
+                                }
+                                else if (att.Status == "Maybe")
+                                {
+                                    <span class="badge badge-maybe font-mono">maybe</span>
+                                }
+                                else
+                                {
+                                    <span class="badge badge-notgoing font-mono">not_going</span>
+                                }
+                            </td>
+                            <td>
+                                @if (att.CheckedIn)
+                                {
+                                    <span class="badge badge-checkedin font-mono">
+                                        <i class="bi bi-check-circle-fill me-1"></i> checked_in
+                                    </span>
+                                    <div class="font-mono text-muted" style="font-size: 11px;">@att.FormattedCheckInTime</div>
+                                }
+                                else
+                                {
+                                    <span class="badge badge-neutral font-mono">
+                                        <i class="bi bi-clock me-1"></i> pending
+                                    </span>
+                                }
+                            </td>
+                            @foreach (var cf in Model.CustomFields)
+                            {
+                                <td>
+                                    <span class="small font-mono">
+                                        @(att.CustomAnswers.ContainsKey(cf.Label) ? att.CustomAnswers[cf.Label] : "—")
+                                    </span>
+                                </td>
+                            }
+                            <td>
+                                <span class="font-mono small text-muted">@att.SubmittedAt.ToLocalTime().ToString("yyyy-MM-dd")</span>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="empty-state py-5">
+            <i class="bi bi-people empty-state-icon"></i>
+            <h5 class="fw-semibold">No RSVPs received yet</h5>
+            <p class="text-muted small font-mono">Distribute the public event link to begin recording attendees.</p>
+            <button type="button" class="btn btn-outline-custom btn-sm" onclick="copyShareLink('publicShareUrlInput')">
+                <i class="bi bi-clipboard me-1"></i> Copy Shareable Link
+            </button>
+        </div>
+    }
+</div>

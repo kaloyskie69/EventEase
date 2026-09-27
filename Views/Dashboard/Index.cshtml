@@ -1,0 +1,309 @@
+@model EventEase.ViewModels.Dashboard.DashboardOverviewViewModel
+@{
+    ViewData["Title"] = "Organizer Dashboard";
+    Layout = "_AdminLayout";
+}
+
+<!-- Welcome & Quick Actions -->
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+    <div>
+        <h3 class="fw-semibold mb-1">Welcome back, @Model.OrganizerName</h3>
+        <p class="text-muted mb-0 font-mono small">Live event telemetry, RSVP streams, and check-in metrics.</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-controller="Events" asp-action="Create" class="btn btn-primary">
+            <i class="bi bi-plus-lg"></i> Create Event
+        </a>
+        <a asp-controller="Events" asp-action="Index" class="btn btn-outline-custom">
+            <i class="bi bi-calendar3"></i> All Events
+        </a>
+    </div>
+</div>
+
+<!-- 6 Metric Cards -->
+<div class="row g-2 mb-4">
+    <div class="col-6 col-md-4 col-xl-2">
+        <div class="stat-card">
+            <div class="stat-icon primary">
+                <i class="bi bi-calendar-event"></i>
+            </div>
+            <div>
+                <div class="stat-value">@Model.TotalEvents</div>
+                <div class="stat-label">Total Events</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-6 col-md-4 col-xl-2">
+        <div class="stat-card">
+            <div class="stat-icon info">
+                <i class="bi bi-calendar-check"></i>
+            </div>
+            <div>
+                <div class="stat-value" style="color: var(--octo-link);">@Model.UpcomingEventsCount</div>
+                <div class="stat-label">Upcoming</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-6 col-md-4 col-xl-2">
+        <div class="stat-card">
+            <div class="stat-icon warning">
+                <i class="bi bi-lightning-fill"></i>
+            </div>
+            <div>
+                <div class="stat-value" style="color: var(--octo-warning);">@Model.TodayEventsCount</div>
+                <div class="stat-label">Today's Events</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-6 col-md-4 col-xl-2">
+        <div class="stat-card">
+            <div class="stat-icon primary">
+                <i class="bi bi-people-fill"></i>
+            </div>
+            <div>
+                <div class="stat-value">@Model.TotalRSVPs</div>
+                <div class="stat-label">Total RSVPs</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-6 col-md-4 col-xl-2">
+        <div class="stat-card">
+            <div class="stat-icon success">
+                <i class="bi bi-person-check-fill"></i>
+            </div>
+            <div>
+                <div class="stat-value" style="color: var(--octo-success);">@Model.TotalCheckedIn</div>
+                <div class="stat-label">Checked In</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-6 col-md-4 col-xl-2">
+        <div class="stat-card">
+            <div class="stat-icon success">
+                <i class="bi bi-pie-chart-fill"></i>
+            </div>
+            <div>
+                <div class="stat-value" style="color: var(--octo-success);">@Model.OverallAttendanceRate%</div>
+                <div class="stat-label">Turnout Rate</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts Section -->
+<div class="row g-3 mb-4">
+    <!-- Monthly Events and Attendance Trends -->
+    <div class="col-lg-8">
+        <div class="card card-modern h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h5 class="fw-semibold mb-0">Monthly Events & Attendance Trends</h5>
+                    <small class="text-muted font-mono">Hosted events vs recorded check-in headcount</small>
+                </div>
+                <span class="badge badge-neutral font-mono">Past 6 Months</span>
+            </div>
+            <div style="position: relative; height: 260px;">
+                <canvas id="monthlyEventsChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- RSVP Distribution Donut Chart -->
+    <div class="col-lg-4">
+        <div class="card card-modern h-100">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h5 class="fw-semibold mb-0">RSVP Status Breakdown</h5>
+                    <small class="text-muted font-mono">Distribution across all events</small>
+                </div>
+            </div>
+            <div style="position: relative; height: 210px;">
+                <canvas id="rsvpDistributionChart"></canvas>
+            </div>
+            <div class="d-flex justify-content-around text-center pt-3 border-top mt-2" style="border-color: var(--octo-border) !important;">
+                <div>
+                    <div class="small text-muted font-mono">Going</div>
+                    <div class="fw-bold font-mono" style="color: var(--octo-success);">@Model.RsvpDistribution.GoingCount</div>
+                </div>
+                <div>
+                    <div class="small text-muted font-mono">Maybe</div>
+                    <div class="fw-bold font-mono" style="color: var(--octo-warning);">@Model.RsvpDistribution.MaybeCount</div>
+                </div>
+                <div>
+                    <div class="small text-muted font-mono">Not Going</div>
+                    <div class="fw-bold font-mono" style="color: var(--octo-error);">@Model.RsvpDistribution.NotGoingCount</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Lower Section: Recent Events & Recent Activity Feed -->
+<div class="row g-3">
+    <!-- Recent Events Table -->
+    <div class="col-lg-8">
+        <div class="card card-modern">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-semibold mb-0">Recent Event Repositories</h5>
+                <a asp-controller="Events" asp-action="Index" class="btn btn-sm btn-outline-custom">
+                    View All <i class="bi bi-arrow-right"></i>
+                </a>
+            </div>
+
+            @if (Model.RecentEvents.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-custom mb-0">
+                        <thead>
+                            <tr>
+                                <th>Event</th>
+                                <th>Schedule & Venue</th>
+                                <th>Status</th>
+                                <th>RSVPs</th>
+                                <th>Turnout</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var ev in Model.RecentEvents)
+                            {
+                                <tr>
+                                    <td>
+                                        <a asp-controller="Events" asp-action="Details" asp-route-id="@ev.Id" class="fw-semibold" style="color: var(--octo-link);">
+                                            @ev.Title
+                                        </a>
+                                        @if (ev.IsToday)
+                                        {
+                                            <span class="badge badge-warning ms-1 font-mono">today</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <div class="font-mono small">@ev.Date.ToString("yyyy-MM-dd")</div>
+                                        <div class="small text-muted">@ev.Venue</div>
+                                    </td>
+                                    <td>
+                                        @if (ev.Status == "Upcoming")
+                                        {
+                                            <span class="badge badge-going font-mono">upcoming</span>
+                                        }
+                                        else if (ev.Status == "Completed")
+                                        {
+                                            <span class="badge badge-neutral font-mono">completed</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge badge-notgoing font-mono">cancelled</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <span class="font-mono small fw-semibold" style="color: var(--octo-success);">@ev.GoingCount</span>
+                                        <span class="text-muted font-mono small">/@ev.TotalRSVPs</span>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="progress flex-grow-1" style="height: 6px; width: 60px;">
+                                                <div class="progress-bar" role="progressbar" style="width: @ev.AttendancePercentage%" aria-valuenow="@ev.AttendancePercentage" aria-valuemin="0" aria-valuemax="100"></div>
+                                            </div>
+                                            <span class="small font-mono fw-semibold">@ev.AttendancePercentage%</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex gap-1">
+                                            <a asp-controller="Attendance" asp-action="CheckIn" asp-route-eventId="@ev.Id" class="btn btn-sm btn-primary" title="Live Event-Day Check In">
+                                                <i class="bi bi-qr-code-scan"></i> Check In
+                                            </a>
+                                            <a asp-controller="Events" asp-action="Details" asp-route-id="@ev.Id" class="btn btn-sm btn-outline-custom" title="Event Details">
+                                                <i class="bi bi-gear"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="empty-state">
+                    <i class="bi bi-calendar-plus empty-state-icon"></i>
+                    <h5 class="fw-semibold">No events created yet</h5>
+                    <p class="text-muted small">Create an event to start collecting RSVPs and check in guests.</p>
+                    <a asp-controller="Events" asp-action="Create" class="btn btn-primary btn-sm">
+                        Create Your First Event
+                    </a>
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Recent Activity Feed (Git Commit / Event Stream Style) -->
+    <div class="col-lg-4">
+        <div class="card card-modern">
+            <h5 class="fw-semibold mb-3">Activity Stream</h5>
+
+            @if (Model.RecentActivities.Any())
+            {
+                <div class="list-group list-group-flush border-0">
+                    @foreach (var act in Model.RecentActivities)
+                    {
+                        <div class="list-group-item px-2 py-2 d-flex align-items-start gap-2 border-bottom" style="border-color: var(--octo-border) !important;">
+                            @if (act.ActivityType == "CheckIn")
+                            {
+                                <span class="badge badge-going mt-1 p-1" style="width: 22px; height: 22px; justify-content: center;">
+                                    <i class="bi bi-check-lg" style="font-size: 11px;"></i>
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge badge-primary mt-1 p-1" style="width: 22px; height: 22px; justify-content: center;">
+                                    <i class="bi bi-send" style="font-size: 11px;"></i>
+                                </span>
+                            }
+                            <div class="flex-grow-1">
+                                <div class="small">
+                                    <span class="fw-semibold" style="color: var(--octo-text-primary);">@act.AttendeeName</span>
+                                    @if (act.ActivityType == "CheckIn")
+                                    {
+                                        <span class="text-success font-mono"> checked_in</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted font-mono"> rsvp: </span>
+                                        <span class="badge font-mono @(act.Status == "Going" ? "badge-going" : act.Status == "Maybe" ? "badge-maybe" : "badge-notgoing")">@act.Status.ToLower()</span>
+                                    }
+                                </div>
+                                <div class="text-muted small">@act.EventTitle</div>
+                                <div class="text-muted font-mono" style="font-size: 11px;">@act.Timestamp.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="text-center py-4 text-muted small font-mono">
+                    <i class="bi bi-terminal fs-4 mb-2 d-block"></i>
+                    No activity stream recorded yet.
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/dashboard-charts.js" asp-append-version="true"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var monthlyData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.MonthlyStats));
+            var rsvpData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.RsvpDistribution));
+            var eventAttendanceData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.AttendanceByEvent));
+            initDashboardCharts(monthlyData, rsvpData, eventAttendanceData);
+        });
+    </script>
+}

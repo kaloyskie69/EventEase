@@ -1,0 +1,209 @@
+@model IEnumerable<EventEase.ViewModels.Event.EventListItemViewModel>
+@{
+    ViewData["Title"] = "Manage Events";
+    Layout = "_AdminLayout";
+    var currentStatus = ViewBag.CurrentStatus as string ?? "All";
+    var currentSearch = ViewBag.CurrentSearch as string ?? "";
+}
+
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+    <div>
+        <h3 class="fw-semibold mb-1">Manage Events</h3>
+        <p class="text-muted mb-0 font-mono small">Event repositories, public RSVP links, and real-time attendance rosters.</p>
+    </div>
+    <div>
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="bi bi-plus-lg"></i> New Event
+        </a>
+    </div>
+</div>
+
+<!-- Octo Underline Tabs & Search Toolbar -->
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3 border-bottom" style="border-color: var(--octo-border) !important;">
+    <!-- Underline Tab Navigation (#F78166 orange active indicator) -->
+    <ul class="nav tab-nav mb-0 border-0">
+        <li class="nav-item">
+            <a class="nav-link @(currentStatus == "All" ? "active" : "")" 
+               asp-action="Index" asp-route-status="All" asp-route-search="@currentSearch">All Events</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link @(currentStatus == "Upcoming" ? "active" : "")" 
+               asp-action="Index" asp-route-status="Upcoming" asp-route-search="@currentSearch">Upcoming</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link @(currentStatus == "Completed" ? "active" : "")" 
+               asp-action="Index" asp-route-status="Completed" asp-route-search="@currentSearch">Completed</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link @(currentStatus == "Cancelled" ? "active" : "")" 
+               asp-action="Index" asp-route-status="Cancelled" asp-route-search="@currentSearch">Cancelled</a>
+        </li>
+    </ul>
+
+    <!-- Filter Search Form -->
+    <div class="pb-2">
+        <form method="get" asp-action="Index" class="d-flex gap-2 m-0">
+            <input type="hidden" name="status" value="@currentStatus" />
+            <div class="octo-search-container" style="max-width: 260px;">
+                <input type="text" name="search" value="@currentSearch" class="octo-search-input" placeholder="Filter events..." />
+                <kbd class="octo-search-kbd">/</kbd>
+            </div>
+            <button type="submit" class="btn btn-outline-custom btn-sm">Filter</button>
+            @if (!string.IsNullOrEmpty(currentSearch))
+            {
+                <a asp-action="Index" asp-route-status="@currentStatus" class="btn btn-outline-custom btn-sm" title="Clear filter">
+                    <i class="bi bi-x-lg"></i>
+                </a>
+            }
+        </form>
+    </div>
+</div>
+
+<!-- Events List -->
+@if (Model != null && Model.Any())
+{
+    <div class="row g-3">
+        @foreach (var ev in Model)
+        {
+            <div class="col-lg-6 col-xl-4">
+                <div class="card card-modern h-100 d-flex flex-column">
+                    <div class="p-3 flex-grow-1">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            @if (ev.Status == "Upcoming")
+                            {
+                                <span class="badge badge-going font-mono">
+                                    <i class="bi bi-check-circle me-1"></i> upcoming
+                                </span>
+                            }
+                            else if (ev.Status == "Completed")
+                            {
+                                <span class="badge badge-neutral font-mono">
+                                    <i class="bi bi-flag me-1"></i> completed
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge badge-notgoing font-mono">
+                                    <i class="bi bi-x-circle me-1"></i> cancelled
+                                </span>
+                            }
+
+                            @if (ev.IsToday)
+                            {
+                                <span class="badge badge-warning font-mono"><i class="bi bi-lightning-fill"></i> today</span>
+                            }
+                        </div>
+
+                        <h5 class="fw-semibold mb-2">
+                            <a asp-action="Details" asp-route-id="@ev.Id" style="color: var(--octo-link);">
+                                @ev.Title
+                            </a>
+                        </h5>
+
+                        <div class="text-muted small mb-3 font-mono">
+                            <div class="mb-1"><i class="bi bi-calendar3 me-1"></i> @ev.Date.ToString("yyyy-MM-dd") • @ev.Time</div>
+                            <div><i class="bi bi-geo-alt me-1"></i> @ev.Venue</div>
+                        </div>
+
+                        <!-- RSVP & Attendance Statistics Bar -->
+                        <div class="p-2 rounded mb-3" style="background-color: var(--octo-bg); border: 1px solid var(--octo-border);">
+                            <div class="d-flex justify-content-between text-center small mb-2 font-mono">
+                                <div>
+                                    <span class="text-muted d-block" style="font-size: 10px;">RSVPS</span>
+                                    <strong style="color: var(--octo-text-primary);">@ev.TotalRSVPs</strong>
+                                </div>
+                                <div class="border-start ps-2" style="border-color: var(--octo-border) !important;">
+                                    <span class="text-muted d-block" style="font-size: 10px;">GOING</span>
+                                    <strong style="color: var(--octo-success);">@ev.GoingCount</strong>
+                                </div>
+                                <div class="border-start ps-2" style="border-color: var(--octo-border) !important;">
+                                    <span class="text-muted d-block" style="font-size: 10px;">CHECKED IN</span>
+                                    <strong style="color: var(--octo-link);">@ev.CheckedInCount</strong>
+                                </div>
+                                <div class="border-start ps-2" style="border-color: var(--octo-border) !important;">
+                                    <span class="text-muted d-block" style="font-size: 10px;">RATE</span>
+                                    <strong style="color: var(--octo-success);">@ev.AttendancePercentage%</strong>
+                                </div>
+                            </div>
+                            <div class="progress" style="height: 4px;">
+                                <div class="progress-bar" role="progressbar" style="width: @ev.AttendancePercentage%" aria-valuenow="@ev.AttendancePercentage" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Footer Action Buttons -->
+                    <div class="p-2 border-top d-flex gap-2 justify-content-between align-items-center" style="border-color: var(--octo-border) !important; background-color: var(--octo-surface-hover);">
+                        @if (ev.CanCheckIn)
+                        {
+                            <a asp-controller="Attendance" asp-action="CheckIn" asp-route-eventId="@ev.Id" class="btn btn-sm btn-primary">
+                                <i class="bi bi-qr-code-scan"></i> Check In
+                            </a>
+                        }
+                        else
+                        {
+                            <span class="badge badge-neutral font-mono">Check-In Closed</span>
+                        }
+
+                        <div class="d-flex gap-1">
+                            <a asp-action="Details" asp-route-id="@ev.Id" class="btn btn-sm btn-outline-custom" title="View Details">
+                                <i class="bi bi-eye"></i>
+                            </a>
+                            <a asp-action="Edit" asp-route-id="@ev.Id" class="btn btn-sm btn-outline-custom" title="Edit Event">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal-@ev.Id" title="Delete">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Delete Confirmation Modal -->
+                <div class="modal fade" id="deleteModal-@ev.Id" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title fw-semibold text-danger">Confirm Delete</h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body py-3">
+                                Are you sure you want to permanently delete event <strong>@ev.Title</strong>? All associated RSVPs, custom question answers, and attendance records will be removed from the database.
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-outline-custom" data-bs-dismiss="modal">Cancel</button>
+                                <form asp-action="Delete" asp-route-id="@ev.Id" method="post" class="m-0">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-danger">Yes, Delete Event</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <div class="empty-state">
+        <i class="bi bi-calendar-x empty-state-icon"></i>
+        <h5 class="fw-semibold">No Events Found</h5>
+        <p class="text-muted small">
+            @if (!string.IsNullOrEmpty(currentSearch) || currentStatus != "All")
+            {
+                <span>No events match your current filter or search query.</span>
+            }
+            else
+            {
+                <span>You haven't created any events yet.</span>
+            }
+        </p>
+        <div class="d-flex justify-content-center gap-2">
+            @if (!string.IsNullOrEmpty(currentSearch) || currentStatus != "All")
+            {
+                <a asp-action="Index" class="btn btn-outline-custom btn-sm">Clear Filter</a>
+            }
+            <a asp-action="Create" class="btn btn-primary btn-sm">Create New Event</a>
+        </div>
+    </div>
+}

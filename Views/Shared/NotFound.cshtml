@@ -1,0 +1,20 @@
+@{
+    ViewData["Title"] = "Event Not Found";
+}
+
+<div class="container-fluid px-lg-5 py-5 text-center">
+    <div class="card card-modern p-5 mx-auto" style="max-width: 520px;">
+        <div class="mb-3">
+            <span class="d-inline-flex align-items-center justify-content-center rounded-circle" style="width: 56px; height: 56px; background: rgba(248, 81, 73, 0.15); border: 1px solid rgba(248, 81, 73, 0.3); color: var(--octo-error);">
+                <i class="bi bi-calendar-x fs-3"></i>
+            </span>
+        </div>
+        <h2 class="fw-semibold mb-2">Event Not Found</h2>
+        <p class="text-muted small font-mono mb-4">
+            HTTP 404 — The event may have been removed, cancelled, or the shareable link is invalid.
+        </p>
+        <a asp-controller="Home" asp-action="Index" class="btn btn-primary">
+            <i class="bi bi-house me-1"></i> Return Home
+        </a>
+    </div>
+</div>

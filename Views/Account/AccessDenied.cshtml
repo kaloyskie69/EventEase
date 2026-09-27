@@ -1,0 +1,20 @@
+@{
+    ViewData["Title"] = "Access Denied";
+}
+
+<div class="container-fluid px-lg-5 py-5 text-center">
+    <div class="card card-modern p-5 mx-auto" style="max-width: 480px;">
+        <div class="mb-3">
+            <span class="d-inline-flex align-items-center justify-content-center rounded-circle" style="width: 56px; height: 56px; background: rgba(210, 153, 34, 0.15); border: 1px solid rgba(210, 153, 34, 0.3); color: var(--octo-warning);">
+                <i class="bi bi-shield-slash-fill fs-3"></i>
+            </span>
+        </div>
+        <h2 class="fw-semibold mb-2">Access Denied</h2>
+        <p class="text-muted small font-mono mb-4">
+            HTTP 403 — You do not have permission to access this resource. Sign in with an authorized organizer account.
+        </p>
+        <a asp-action="Login" class="btn btn-primary">
+            <i class="bi bi-box-arrow-in-right me-1"></i> Sign In
+        </a>
+    </div>
+</div>

@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - EventEase Hub</title>
+
+    <!-- Google Fonts: Inter & JetBrains Mono (Octo Code Spec) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <!-- Custom CSS (Octo Code) -->
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/admin.css" asp-append-version="true" />
+</head>
+<body>
+    <div class="admin-wrapper">
+        <!-- Sticky Sidebar -->
+        <aside class="admin-sidebar" id="adminSidebar">
+            <div class="sidebar-brand">
+                <span class="brand-badge"><i class="bi bi-terminal-fill"></i></span>
+                <span class="fw-semibold">eventease<span class="text-muted">/</span><span style="color: var(--octo-link);">hub</span></span>
+            </div>
+
+            <ul class="sidebar-nav">
+                <li class="sidebar-section-title">Navigation</li>
+                <li class="sidebar-item">
+                    <a class="sidebar-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Dashboard" ? "active" : "")" asp-controller="Dashboard" asp-action="Index">
+                        <i class="bi bi-speedometer2"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+
+                <li class="sidebar-section-title">Event Operations</li>
+                <li class="sidebar-item">
+                    <a class="sidebar-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Events" && ViewContext.RouteData.Values["Action"]?.ToString() == "Index" ? "active" : "")" asp-controller="Events" asp-action="Index">
+                        <i class="bi bi-calendar-event"></i>
+                        <span>Manage Events</span>
+                    </a>
+                </li>
+                <li class="sidebar-item">
+                    <a class="sidebar-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Events" && ViewContext.RouteData.Values["Action"]?.ToString() == "Create" ? "active" : "")" asp-controller="Events" asp-action="Create">
+                        <i class="bi bi-plus-circle"></i>
+                        <span>Create Event</span>
+                    </a>
+                </li>
+
+                <li class="sidebar-section-title">Analytics & Check-in</li>
+                <li class="sidebar-item">
+                    <a class="sidebar-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Reports" ? "active" : "")" asp-controller="Reports" asp-action="Index">
+                        <i class="bi bi-graph-up"></i>
+                        <span>Reports & Stats</span>
+                    </a>
+                </li>
+            </ul>
+
+            <div class="sidebar-footer">
+                <a asp-controller="Home" asp-action="Index" class="btn btn-outline-custom btn-sm w-100 mb-2 text-start">
+                    <i class="bi bi-box-arrow-up-right me-2"></i> Public View
+                </a>
+                <form asp-controller="Account" asp-action="Logout" method="post">
+                    <button type="submit" class="btn btn-danger btn-sm w-100 text-start">
+                        <i class="bi bi-box-arrow-right me-2"></i> Sign Out
+                    </button>
+                </form>
+            </div>
+        </aside>
+
+        <!-- Main Body Area -->
+        <div class="admin-main">
+            <!-- Top Header Bar -->
+            <header class="admin-header">
+                <div class="d-flex align-items-center gap-3">
+                    <button class="btn btn-outline-custom d-lg-none p-1" type="button" id="sidebarToggleBtn">
+                        <i class="bi bi-list fs-5"></i>
+                    </button>
+                    <h5 class="mb-0 fw-semibold">@ViewData["Title"]</h5>
+                </div>
+
+                <div class="d-flex align-items-center gap-3">
+                    <!-- Search with / kbd -->
+                    <div class="octo-search-container d-none d-md-block" style="max-width: 240px;">
+                        <form method="get" asp-controller="Events" asp-action="Index" class="m-0">
+                            <input type="text" name="search" class="octo-search-input" placeholder="Type / to search..." id="adminSearchInput" />
+                            <kbd class="octo-search-kbd">/</kbd>
+                        </form>
+                    </div>
+
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="d-none d-md-inline-block small text-muted font-mono">
+                            @User.Identity?.Name
+                        </span>
+                        <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; background: var(--octo-surface-hover); border: 1px solid var(--octo-border); color: var(--octo-link);">
+                            <i class="bi bi-person-fill"></i>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Page Body -->
+            <main class="admin-body">
+                @RenderBody()
+            </main>
+        </div>
+    </div>
+
+    <partial name="_NotificationToast" />
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    <script>
+        document.getElementById('sidebarToggleBtn')?.addEventListener('click', function() {
+            document.getElementById('adminSidebar')?.classList.toggle('show');
+        });
+
+        // Keyboard shortcut: '/' focuses search
+        document.addEventListener('keydown', function(e) {
+            if (e.key === '/' && !['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) {
+                e.preventDefault();
+                const searchInput = document.getElementById('adminSearchInput');
+                if (searchInput) {
+                    searchInput.focus();
+                }
+            }
+        });
+    </script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

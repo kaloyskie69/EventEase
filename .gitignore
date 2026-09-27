@@ -1,0 +1,38 @@
+# Build output
+[Bb]in/
+[Oo]bj/
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+
+# Rider / VS Code
+.idea/
+.vscode/
+
+# Secrets / local config
+appsettings.Development.json
+appsettings.*.local.json
+*.env
+.env
+
+# Logs
+*.log
+logs/
+
+# Local test artifacts (project-specific scratch files)
+cookies.txt
+test_endpoints.ps1
+test_rsvp_fix.ps1
+test_curl.bat
+verify.ps1
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# NuGet
+*.nupkg
+**/packages/*
+!**/packages/build/

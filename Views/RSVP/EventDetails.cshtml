@@ -1,0 +1,309 @@
+@model EventEase.ViewModels.RSVP.PublicEventLandingViewModel
+@{
+    ViewData["Title"] = Model.Title;
+    Layout = "_Layout";
+}
+
+<div class="container-fluid px-lg-5 py-4">
+    <!-- Hero Banner -->
+    <div class="event-hero-banner mb-4">
+        <div class="row align-items-center gy-4">
+            <div class="col-lg-8">
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <span class="badge badge-neutral font-mono">
+                        <i class="bi bi-bookmark-fill me-1"></i> Public Event
+                    </span>
+                    @if (Model.IsEventActive)
+                    {
+                        <span class="badge badge-going font-mono">RSVP Open</span>
+                    }
+                    else
+                    {
+                        <span class="badge badge-notgoing font-mono">Closed / Cancelled</span>
+                    }
+                </div>
+
+                <h1 class="display-4 fw-bold mb-3" style="color: var(--octo-text-primary);">@Model.Title</h1>
+
+                <div class="d-flex flex-wrap gap-4 text-muted mb-4 font-mono small">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-calendar3" style="color: var(--octo-link);"></i>
+                        <span>@Model.Date.ToString("dddd, MMMM dd, yyyy")</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-clock" style="color: var(--octo-link);"></i>
+                        <span>@Model.Time</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-geo-alt-fill" style="color: var(--octo-error);"></i>
+                        <span>@Model.Venue</span>
+                    </div>
+                </div>
+
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge badge-neutral font-mono">
+                        <i class="bi bi-person-circle me-1"></i> hosted_by: @Model.OrganizerName
+                    </span>
+                    <span class="badge badge-going font-mono">
+                        <i class="bi bi-people-fill me-1"></i> @Model.GoingCount confirmed_going
+                    </span>
+                </div>
+            </div>
+
+            <!-- Countdown Timer Card -->
+            <div class="col-lg-4 text-center">
+                <div class="p-3 rounded" style="background-color: var(--octo-bg); border: 1px solid var(--octo-border);" 
+                     id="eventCountdown" data-event-date="@Model.EventDateTime.ToString("yyyy-MM-ddTHH:mm:ss")">
+                    <div class="small text-uppercase font-mono text-muted fw-semibold mb-3">
+                        <i class="bi bi-hourglass-split me-1"></i> Event Starts In
+                    </div>
+                    <div class="d-flex justify-content-center gap-2">
+                        <div class="countdown-box">
+                            <div class="countdown-num" id="cdDays">00</div>
+                            <div class="countdown-lbl">Days</div>
+                        </div>
+                        <div class="countdown-box">
+                            <div class="countdown-num" id="cdHours">00</div>
+                            <div class="countdown-lbl">Hours</div>
+                        </div>
+                        <div class="countdown-box">
+                            <div class="countdown-num" id="cdMins">00</div>
+                            <div class="countdown-lbl">Mins</div>
+                        </div>
+                        <div class="countdown-box">
+                            <div class="countdown-num" id="cdSecs">00</div>
+                            <div class="countdown-lbl">Secs</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content & RSVP Form -->
+    <div class="row g-4">
+        <!-- Event Description & Venue Details -->
+        <div class="col-lg-5">
+            <div class="card card-modern p-4 mb-4">
+                <h4 class="fw-semibold mb-3">About this Event</h4>
+                <div class="text-muted small mb-4" style="line-height: 1.7;">
+                    @if (!string.IsNullOrWhiteSpace(Model.Description))
+                    {
+                        @Html.Raw(Model.Description.Replace("\n", "<br/>"))
+                    }
+                    else
+                    {
+                        <p class="fst-italic text-muted font-mono">No additional description provided by the organizer.</p>
+                    }
+                </div>
+
+                <div class="border-top pt-4" style="border-color: var(--octo-border) !important;">
+                    <h6 class="fw-semibold mb-3">Location Details</h6>
+                    <div class="d-flex align-items-start gap-3 text-muted">
+                        <span class="badge badge-notgoing p-2" style="width: 32px; height: 32px; justify-content: center;">
+                            <i class="bi bi-geo-alt-fill"></i>
+                        </span>
+                        <div>
+                            <div class="fw-semibold" style="color: var(--octo-text-primary);">@Model.Venue</div>
+                            <small class="text-muted font-mono" style="font-size: 11px;">On-site check-in at venue entrance on event day.</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Share Box -->
+            <div class="card card-modern p-4">
+                <h6 class="fw-semibold mb-2">Share this Event</h6>
+                <p class="small text-muted font-mono mb-3">No login required to RSVP. Share this link directly.</p>
+                <div class="input-group">
+                    <input type="text" class="form-control font-mono small" id="shareLinkInput" value="@($"{Context.Request.Scheme}://{Context.Request.Host}/RSVP/{Model.EventId}")" readonly />
+                    <button type="button" class="btn btn-outline-custom" onclick="copyShareLink('shareLinkInput')">
+                        <i class="bi bi-clipboard"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- RSVP Submission Form -->
+        <div class="col-lg-7">
+            <div class="card card-modern p-4">
+                <div class="d-flex align-items-center justify-content-between mb-4 pb-3 border-bottom" style="border-color: var(--octo-border) !important;">
+                    <div>
+                        <h3 class="fw-semibold mb-1">Submit Your RSVP</h3>
+                        <p class="text-muted small mb-0 font-mono">No account creation required.</p>
+                    </div>
+                    <span class="badge badge-primary font-mono">
+                        no-auth
+                    </span>
+                </div>
+
+                @if (!Model.IsEventActive)
+                {
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-circle-fill me-2"></i>
+                        This event is no longer accepting new RSVPs because it has ended or been cancelled.
+                    </div>
+                }
+                else
+                {
+                    <form asp-controller="RSVP" asp-action="Submit" method="post" id="rsvpForm" novalidate>
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" asp-for="SubmitForm.EventId" value="@Model.EventId" />
+                        <input type="hidden" name="EventId" value="@Model.EventId" />
+
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-4"></div>
+
+                        <!-- 1. RSVP Status Radio Selection -->
+                        <div class="mb-4">
+                            <label class="form-label small font-mono text-uppercase">
+                                Will you attend? <span class="text-danger">*</span>
+                            </label>
+                            <div class="status-selector">
+                                <label class="status-option">
+                                    <input type="radio" asp-for="SubmitForm.Status" value="Going" checked />
+                                    <div class="status-card going">
+                                        <i class="bi bi-check-circle"></i>
+                                        <span class="status-title">Going</span>
+                                        <small class="font-mono" style="font-size: 11px;">Count me in</small>
+                                    </div>
+                                </label>
+
+                                <label class="status-option">
+                                    <input type="radio" asp-for="SubmitForm.Status" value="Maybe" />
+                                    <div class="status-card maybe">
+                                        <i class="bi bi-question-circle"></i>
+                                        <span class="status-title">Maybe</span>
+                                        <small class="font-mono" style="font-size: 11px;">Not sure yet</small>
+                                    </div>
+                                </label>
+
+                                <label class="status-option">
+                                    <input type="radio" asp-for="SubmitForm.Status" value="Not Going" />
+                                    <div class="status-card notgoing">
+                                        <i class="bi bi-x-circle"></i>
+                                        <span class="status-title">Not Going</span>
+                                        <small class="font-mono" style="font-size: 11px;">Can't make it</small>
+                                    </div>
+                                </label>
+                            </div>
+                            <span asp-validation-for="SubmitForm.Status" class="text-danger small"></span>
+                        </div>
+
+                        <!-- 2. Contact Information -->
+                        <div class="mb-4">
+                            <h6 class="fw-semibold mb-3 pb-2 border-bottom" style="border-color: var(--octo-border) !important;">Contact Details</h6>
+
+                            <div class="row g-3">
+                                <div class="col-12">
+                                    <label asp-for="SubmitForm.FullName" class="form-label small font-mono">
+                                        Full Name <span class="text-danger">*</span>
+                                    </label>
+                                    <input asp-for="SubmitForm.FullName" class="form-control" placeholder="e.g. Jane Doe" />
+                                    <span asp-validation-for="SubmitForm.FullName" class="text-danger small"></span>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label asp-for="SubmitForm.Email" class="form-label small font-mono">
+                                        Email Address <span class="text-danger">*</span>
+                                    </label>
+                                    <input asp-for="SubmitForm.Email" class="form-control" placeholder="name@example.com" />
+                                    <span asp-validation-for="SubmitForm.Email" class="text-danger small"></span>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <label asp-for="SubmitForm.Phone" class="form-label small font-mono">
+                                        Phone Number (Optional)
+                                    </label>
+                                    <input asp-for="SubmitForm.Phone" class="form-control" placeholder="+1 555-0100" />
+                                    <span asp-validation-for="SubmitForm.Phone" class="text-danger small"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 3. Dynamic Custom Questions -->
+                        @if (Model.SubmitForm.Answers != null && Model.SubmitForm.Answers.Any())
+                        {
+                            <div class="mb-4">
+                                <h6 class="fw-semibold mb-3 pb-2 border-bottom" style="border-color: var(--octo-border) !important;">Additional Questions</h6>
+
+                                @for (int i = 0; i < Model.SubmitForm.Answers.Count; i++)
+                                {
+                                    var q = Model.SubmitForm.Answers[i];
+                                    <input type="hidden" name="SubmitForm.Answers[@i].CustomFieldId" value="@q.CustomFieldId" />
+                                    <input type="hidden" name="SubmitForm.Answers[@i].Label" value="@q.Label" />
+                                    <input type="hidden" name="SubmitForm.Answers[@i].FieldType" value="@q.FieldType" />
+                                    <input type="hidden" name="SubmitForm.Answers[@i].Required" value="@(q.Required ? "true" : "false")" />
+                                    <input type="hidden" name="SubmitForm.Answers[@i].Options" value="@q.Options" />
+
+                                    <div class="mb-3">
+                                        <label class="form-label small font-mono">
+                                            @q.Label
+                                            @if (q.Required)
+                                            {
+                                                <span class="text-danger">*</span>
+                                            }
+                                        </label>
+
+                                        @if (q.FieldType == "Dropdown")
+                                        {
+                                            <select name="SubmitForm.Answers[@i].Response" class="form-select font-mono" @(q.Required ? "required" : "")>
+                                                <option value="">-- Select --</option>
+                                                @foreach (var opt in q.ParsedOptions)
+                                                {
+                                                    <option value="@opt" selected="@(q.Response == opt)">@opt</option>
+                                                }
+                                            </select>
+                                        }
+                                        else if (q.FieldType == "Number")
+                                        {
+                                            <input type="number" name="SubmitForm.Answers[@i].Response" value="@q.Response" class="form-control" placeholder="Enter number..." @(q.Required ? "required" : "") />
+                                        }
+                                        else if (q.FieldType == "Checkbox")
+                                        {
+                                            <div class="form-check mt-2">
+                                                <input type="checkbox" name="SubmitForm.Answers[@i].Response" value="Yes" class="form-check-input" id="check_@i" @(q.Response == "Yes" ? "checked" : "") />
+                                                <label class="form-check-label small font-mono" for="check_@i">Yes, confirmed</label>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <input type="text" name="SubmitForm.Answers[@i].Response" value="@q.Response" class="form-control" placeholder="Type your answer..." @(q.Required ? "required" : "") />
+                                        }
+                                        <span class="text-danger small" asp-validation-for="@Model.SubmitForm.Answers[i].Response"></span>
+                                    </div>
+                                }
+                            </div>
+                        }
+
+                        <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold" style="height: 44px;">
+                            <i class="bi bi-send-check me-2"></i> Confirm My RSVP
+                        </button>
+
+                        <div class="text-center mt-3 text-muted font-mono" style="font-size: 11px;">
+                            <i class="bi bi-shield-lock me-1"></i> Your email is used solely for this event's check-in roster.
+                        </div>
+                    </form>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        // Prevent double-submission of RSVP form
+        document.addEventListener('DOMContentLoaded', function() {
+            var form = document.getElementById('rsvpForm');
+            if (form) {
+                form.addEventListener('submit', function(e) {
+                    var submitBtn = form.querySelector('button[type="submit"]');
+                    if (submitBtn && !submitBtn.disabled) {
+                        submitBtn.disabled = true;
+                        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Submitting...';
+                    }
+                });
+            }
+        });
+    </script>
+}
