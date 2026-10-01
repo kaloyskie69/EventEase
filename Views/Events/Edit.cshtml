@@ -74,6 +74,11 @@
                         <input asp-for="Time" class="form-control" />
                         <span asp-validation-for="Time" class="text-danger small"></span>
                     </div>
+                    <div class="col-md-6">
+                        <label asp-for="Capacity" class="form-label small font-mono"></label>
+                        <input asp-for="Capacity" type="number" min="1" class="form-control" placeholder="Leave blank for no limit" />
+                        <span asp-validation-for="Capacity" class="text-danger small"></span>
+                    </div>
                 </div>
             </div>
 

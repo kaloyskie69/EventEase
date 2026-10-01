@@ -32,6 +32,10 @@ namespace EventEase.ViewModels.Event
         [Display(Name = "Event Time")]
         public string Time { get; set; } = string.Empty;
 
+        [Range(1, int.MaxValue, ErrorMessage = "Capacity must be greater than zero.")]
+        [Display(Name = "Attendee Capacity (Optional)")]
+        public int? Capacity { get; set; }
+
         [Required]
         [Display(Name = "Event Status")]
         public string Status { get; set; } = "Upcoming"; // Upcoming, Completed, Cancelled

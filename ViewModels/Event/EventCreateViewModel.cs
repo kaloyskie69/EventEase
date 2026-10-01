@@ -30,6 +30,10 @@ namespace EventEase.ViewModels.Event
         [Display(Name = "Event Time")]
         public string Time { get; set; } = "10:00 AM";
 
+        [Range(1, int.MaxValue, ErrorMessage = "Capacity must be greater than zero.")]
+        [Display(Name = "Attendee Capacity (Optional)")]
+        public int? Capacity { get; set; }
+
         public List<CustomFieldInputViewModel> CustomFields { get; set; } = new List<CustomFieldInputViewModel>();
 
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)

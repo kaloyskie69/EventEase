@@ -47,6 +47,10 @@
                     <span class="badge badge-going font-mono">
                         <i class="bi bi-people-fill me-1"></i> @Model.GoingCount confirmed_going
                     </span>
+                    @if (Model.Capacity.HasValue)
+                    {
+                        <span class="badge badge-neutral font-mono">capacity @Model.GoingCount / @Model.Capacity</span>
+                    }
                 </div>
             </div>
 
@@ -152,6 +156,11 @@
                         <input type="hidden" name="EventId" value="@Model.EventId" />
 
                         <div asp-validation-summary="ModelOnly" class="alert alert-danger mb-4"></div>
+
+                        @if (Model.CapacityReached)
+                        {
+                            <div class="alert alert-info">This event has reached capacity. Going responses will be added to the waitlist.</div>
+                        }
 
                         <!-- 1. RSVP Status Radio Selection -->
                         <div class="mb-4">

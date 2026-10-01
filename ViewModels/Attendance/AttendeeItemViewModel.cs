@@ -10,6 +10,7 @@ namespace EventEase.ViewModels.Attendance
         public string Email { get; set; } = string.Empty;
         public string? Phone { get; set; }
         public string Status { get; set; } = "Going"; // Going, Maybe, Not Going
+        public bool IsWaitlisted { get; set; }
         public DateTime SubmittedAt { get; set; }
 
         public bool CheckedIn { get; set; }

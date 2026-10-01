@@ -14,6 +14,8 @@ namespace EventEase.ViewModels.Event
         public DateTime CreatedAt { get; set; }
 
         public int TotalRSVPs { get; set; }
+        public int WaitlistedCount { get; set; }
+        public int? Capacity { get; set; }
         public int GoingCount { get; set; }
         public int MaybeCount { get; set; }
         public int NotGoingCount { get; set; }

@@ -14,9 +14,9 @@
                     </span>
                 </div>
 
-                <h2 class="fw-semibold mb-2">RSVP Confirmed</h2>
+                <h2 class="fw-semibold mb-2">@(Model.IsWaitlisted ? "Added to Waitlist" : "RSVP Confirmed")</h2>
                 <p class="text-muted mb-4 font-mono small">
-                    Thank you, <strong style="color: var(--octo-text-primary);">@Model.FullName</strong>. Your response has been saved.
+                    Thank you, <strong style="color: var(--octo-text-primary);">@Model.FullName</strong>. @if (Model.IsWaitlisted) { <text>Capacity is full; your Going response is waitlisted.</text> } else { <text>Your response has been saved.</text> }
                 </p>
 
                 <!-- Event Reminder Card -->

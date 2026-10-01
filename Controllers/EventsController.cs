@@ -207,7 +207,7 @@ namespace EventEase.Controllers
             }
 
             var builder = new StringBuilder();
-            builder.Append("RSVP ID,Full Name,Email,Phone,RSVP Status,Checked In,Check-In Time,Submitted Date");
+            builder.Append("RSVP ID,Full Name,Email,Phone,RSVP Status,Waitlisted,Checked In,Check-In Time,Submitted Date");
 
             foreach (var cf in details.CustomFields)
             {
@@ -222,6 +222,7 @@ namespace EventEase.Controllers
                 builder.Append($"\"{att.Email.Replace("\"", "\"\"")}\",");
                 builder.Append($"\"{(att.Phone ?? "").Replace("\"", "\"\"")}\",");
                 builder.Append($"\"{att.Status}\",");
+                builder.Append(att.IsWaitlisted ? "Yes," : "No,");
                 builder.Append(att.CheckedIn ? "Yes," : "No,");
                 builder.Append($"\"{att.FormattedCheckInTime}\",");
                 builder.Append($"\"{att.SubmittedAt:yyyy-MM-dd HH:mm}\"");

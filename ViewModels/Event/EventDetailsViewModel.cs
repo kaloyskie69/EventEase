@@ -18,6 +18,8 @@ namespace EventEase.ViewModels.Event
         public string PublicUrl { get; set; } = string.Empty;
 
         public int TotalRSVPs { get; set; }
+        public int WaitlistedCount { get; set; }
+        public int? Capacity { get; set; }
         public int GoingCount { get; set; }
         public int MaybeCount { get; set; }
         public int NotGoingCount { get; set; }

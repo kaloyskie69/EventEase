@@ -93,7 +93,7 @@ namespace EventEase.Repositories
             return await _context.RSVPs.FindOneAsync(r => r.EventId == eventId && r.Email == normalizedEmail) != null;
         }
 
-        public async Task<RSVP> AddAsync(RSVP rsvp, IEnumerable<CustomFieldResponse>? responses = null)
+        public async Task<RSVP> AddAsync(RSVP rsvp, IEnumerable<CustomFieldResponse>? responses = null, int? capacity = null)
         {
             await SubmissionLock.WaitAsync();
             try
@@ -101,6 +101,11 @@ namespace EventEase.Repositories
                 if (await ExistsByEmailAsync(rsvp.EventId, rsvp.Email))
                 {
                     throw new DuplicateRsvpException();
+                }
+
+                if (rsvp.Status == "Going" && capacity.HasValue)
+                {
+                    rsvp.IsWaitlisted = await GetCountByStatusAsync(rsvp.EventId, "Going") >= capacity.Value;
                 }
 
                 if (rsvp.Id <= 0)
@@ -157,7 +162,7 @@ namespace EventEase.Repositories
 
         public async Task<int> GetCountByStatusAsync(int eventId, string status)
         {
-            var count = await _context.RSVPs.CountDocumentsAsync(r => r.EventId == eventId && r.Status == status);
+            var count = await _context.RSVPs.CountDocumentsAsync(r => r.EventId == eventId && r.Status == status && (status != "Going" || !r.IsWaitlisted));
             return (int)count;
         }
     }

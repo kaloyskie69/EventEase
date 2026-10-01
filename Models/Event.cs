@@ -46,6 +46,9 @@ namespace EventEase.Models
         [StringLength(50)]
         public string Time { get; set; } = string.Empty;
 
+        [Range(1, int.MaxValue, ErrorMessage = "Capacity must be greater than zero.")]
+        public int? Capacity { get; set; }
+
         [Required]
         [StringLength(50)]
         public string Status { get; set; } = "Upcoming"; // "Upcoming", "Completed", "Cancelled"

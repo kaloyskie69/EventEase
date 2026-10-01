@@ -15,6 +15,7 @@ namespace EventEase.ViewModels.RSVP
         public string FullName { get; set; } = string.Empty;
         public string Email { get; set; } = string.Empty;
         public string Status { get; set; } = "Going"; // Going, Maybe, Not Going
+        public bool IsWaitlisted { get; set; }
         public DateTime SubmittedAt { get; set; }
 
         public Dictionary<string, string> CustomResponses { get; set; } = new Dictionary<string, string>();

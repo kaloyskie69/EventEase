@@ -53,7 +53,7 @@ namespace EventEase.Services
             }
 
             var totalRSVPs = ev.RSVPs.Count;
-            var totalGoing = ev.RSVPs.Count(r => r.Status == "Going");
+            var totalGoing = ev.RSVPs.Count(r => r.Status == "Going" && !r.IsWaitlisted);
             var totalCheckedIn = ev.RSVPs.Count(r => r.Attendance != null && r.Attendance.CheckedIn);
             var percentage = totalGoing > 0 ? Math.Round((double)totalCheckedIn / totalGoing * 100, 1) : 0.0;
 
@@ -79,6 +79,7 @@ namespace EventEase.Services
                     Email = r.Email,
                     Phone = r.Phone,
                     Status = r.Status,
+                    IsWaitlisted = r.IsWaitlisted,
                     SubmittedAt = r.SubmittedAt,
                     CheckedIn = r.Attendance != null && r.Attendance.CheckedIn,
                     CheckedInTime = r.Attendance?.CheckedInTime,
@@ -127,6 +128,9 @@ namespace EventEase.Services
             var ev = await _eventRepository.GetByIdAsync(rsvp.EventId);
             if (ev == null || ev.OrganizerId != organizerId)
                 return new CheckInResultViewModel { Success = false, Message = "Attendee RSVP record not found." };
+
+            if (rsvp.IsWaitlisted)
+                return new CheckInResultViewModel { Success = false, Message = "This attendee is on the waitlist and cannot be checked in." };
 
             var existingAttendance = await _attendanceRepository.GetByRsvpIdAsync(rsvpId);
             if (existingAttendance != null && existingAttendance.CheckedIn)

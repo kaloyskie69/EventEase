@@ -25,7 +25,7 @@ namespace EventEase.Services
             var ev = await _eventRepository.GetByIdWithDetailsAsync(eventId);
             if (ev == null) return null;
 
-            var goingCount = ev.RSVPs.Count(r => r.Status == "Going");
+            var goingCount = ev.RSVPs.Count(r => r.Status == "Going" && !r.IsWaitlisted);
 
             var answers = ev.CustomFields.Select(cf => new CustomFieldAnswerViewModel
             {
@@ -55,6 +55,7 @@ namespace EventEase.Services
                 Status = ev.Status,
                 OrganizerName = ev.Organizer?.FullName ?? "Event Organizer",
                 GoingCount = goingCount,
+                Capacity = ev.Capacity,
                 SubmitForm = submitForm
             };
         }
@@ -70,6 +71,11 @@ namespace EventEase.Services
             if (ev.Status == "Cancelled")
             {
                 return (false, "This event has been cancelled by the organizer.", 0);
+            }
+
+            if (!new[] { "Going", "Maybe", "Not Going" }.Contains(model.Status))
+            {
+                return (false, "Please choose Going, Maybe, or Not Going.", 0);
             }
 
             // Check duplicate RSVP using email
@@ -104,7 +110,7 @@ namespace EventEase.Services
 
             try
             {
-                var createdRsvp = await _rsvpRepository.AddAsync(rsvp, responses);
+                var createdRsvp = await _rsvpRepository.AddAsync(rsvp, responses, ev.Capacity);
                 return (true, null, createdRsvp.Id);
             }
             catch (DuplicateRsvpException)
@@ -138,6 +144,7 @@ namespace EventEase.Services
                 FullName = rsvp.FullName,
                 Email = rsvp.Email,
                 Status = rsvp.Status,
+                IsWaitlisted = rsvp.IsWaitlisted,
                 SubmittedAt = rsvp.SubmittedAt,
                 CustomResponses = responses
             };

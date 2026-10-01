@@ -42,7 +42,7 @@ namespace EventEase.Services
                 // Cache RSVP list and counts to avoid multiple enumerations
                 var rsvpList = e.RSVPs ?? new List<RSVP>();
                 var total = rsvpList.Count;
-                var going = rsvpList.Count(r => r.Status == "Going");
+                var going = rsvpList.Count(r => r.Status == "Going" && !r.IsWaitlisted);
                 var maybe = rsvpList.Count(r => r.Status == "Maybe");
                 var notGoing = rsvpList.Count(r => r.Status == "Not Going");
                 var checkedIn = rsvpList.Count(r => r.Attendance != null && r.Attendance.CheckedIn);
@@ -57,6 +57,8 @@ namespace EventEase.Services
                     Date = e.Date,
                     Time = e.Time,
                     Status = e.Status,
+                    Capacity = e.Capacity,
+                    WaitlistedCount = rsvpList.Count(r => r.IsWaitlisted),
                     CreatedAt = e.CreatedAt,
                     TotalRSVPs = total,
                     GoingCount = going,
@@ -75,7 +77,7 @@ namespace EventEase.Services
 
             // Cache RSVP list to avoid multiple enumerations
             var rsvpList = ev.RSVPs ?? new List<RSVP>();
-            var going = rsvpList.Count(r => r.Status == "Going");
+            var going = rsvpList.Count(r => r.Status == "Going" && !r.IsWaitlisted);
             var checkedIn = rsvpList.Count(r => r.Attendance != null && r.Attendance.CheckedIn);
             var rate = going > 0 ? Math.Round((double)checkedIn / going * 100, 1) : 0.0;
 
@@ -100,6 +102,7 @@ namespace EventEase.Services
                     Email = r.Email,
                     Phone = r.Phone,
                     Status = r.Status,
+                    IsWaitlisted = r.IsWaitlisted,
                     SubmittedAt = r.SubmittedAt,
                     CheckedIn = r.Attendance != null && r.Attendance.CheckedIn,
                     CheckedInTime = r.Attendance?.CheckedInTime,
@@ -129,6 +132,8 @@ namespace EventEase.Services
                 Date = ev.Date,
                 Time = ev.Time,
                 Status = ev.Status,
+                Capacity = ev.Capacity,
+                WaitlistedCount = rsvpList.Count(r => r.IsWaitlisted),
                 CreatedAt = ev.CreatedAt,
                 OrganizerName = ev.Organizer?.FullName ?? "Event Organizer",
                 PublicUrl = publicUrl,
@@ -156,6 +161,7 @@ namespace EventEase.Services
                 Venue = ev.Venue,
                 Date = ev.Date,
                 Time = ev.Time,
+                Capacity = ev.Capacity,
                 Status = ev.Status,
                 CustomFields = ev.CustomFields.Select(cf => new CustomFieldInputViewModel
                 {
@@ -179,6 +185,7 @@ namespace EventEase.Services
                 Venue = model.Venue.Trim(),
                 Date = model.Date.Date,
                 Time = model.Time.Trim(),
+                Capacity = model.Capacity,
                 Status = "Upcoming",
                 CreatedAt = DateTime.UtcNow
             };
@@ -218,6 +225,7 @@ namespace EventEase.Services
             ev.Venue = model.Venue.Trim();
             ev.Date = model.Date.Date;
             ev.Time = model.Time.Trim();
+            ev.Capacity = model.Capacity;
             ev.Status = model.Status;
 
             await _eventRepository.UpdateAsync(ev);

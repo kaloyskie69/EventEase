@@ -5,6 +5,7 @@ using EventEase.Interfaces;
 using EventEase.ViewModels.RSVP;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace EventEase.Controllers
 {
@@ -41,6 +42,7 @@ namespace EventEase.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [EnableRateLimiting("rsvp-submit")]
         [Route("RSVP/Submit")]
         public async Task<IActionResult> Submit()
         {

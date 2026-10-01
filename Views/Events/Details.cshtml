@@ -30,6 +30,10 @@
             <span class="mx-2">•</span> 
             <i class="bi bi-geo-alt me-1"></i> @Model.Venue
         </p>
+        @if (Model.Capacity.HasValue)
+        {
+            <p class="text-muted small mb-0 mt-1 font-mono">Capacity: @Model.GoingCount / @Model.Capacity · Waitlisted: @Model.WaitlistedCount</p>
+        }
     </div>
 
     <div class="d-flex flex-wrap gap-2">
@@ -187,6 +191,10 @@
                                 else
                                 {
                                     <span class="badge badge-notgoing font-mono">not_going</span>
+                                }
+                                @if (att.IsWaitlisted)
+                                {
+                                    <div><span class="badge badge-maybe font-mono mt-1">waitlisted</span></div>
                                 }
                             </td>
                             <td>

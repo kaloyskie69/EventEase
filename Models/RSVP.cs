@@ -38,6 +38,8 @@ namespace EventEase.Models
         [StringLength(50)]
         public string Status { get; set; } = "Going"; // "Going", "Maybe", "Not Going"
 
+        public bool IsWaitlisted { get; set; }
+
         public DateTime SubmittedAt { get; set; } = DateTime.UtcNow;
 
         /// <summary>

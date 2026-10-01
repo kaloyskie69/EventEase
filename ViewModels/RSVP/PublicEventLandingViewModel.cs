@@ -14,6 +14,8 @@ namespace EventEase.ViewModels.RSVP
         public string OrganizerName { get; set; } = string.Empty;
 
         public int GoingCount { get; set; }
+        public int? Capacity { get; set; }
+        public bool CapacityReached => Capacity.HasValue && GoingCount >= Capacity.Value;
         public bool IsEventActive => Status == "Upcoming" && Date.Date >= DateTime.Today;
 
         public DateTime EventDateTime

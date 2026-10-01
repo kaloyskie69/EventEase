@@ -71,7 +71,7 @@ namespace EventEase.Services
             {
                 switch (r.Status)
                 {
-                    case "Going": goingRsvps++; break;
+                    case "Going": if (!r.IsWaitlisted) goingRsvps++; break;
                     case "Maybe": maybeRsvps++; break;
                     case "Not Going": notGoingRsvps++; break;
                 }
@@ -141,7 +141,7 @@ namespace EventEase.Services
                 .Take(5)
                 .Select(e =>
                 {
-                    var going = e.RSVPs.Count(r => r.Status == "Going");
+                    var going = e.RSVPs.Count(r => r.Status == "Going" && !r.IsWaitlisted);
                     var checkedIn = e.RSVPs.Count(r => r.Attendance != null && r.Attendance.CheckedIn);
                     return new EventAttendanceStatViewModel
                     {
@@ -188,7 +188,7 @@ namespace EventEase.Services
                 total++;
                 switch (r.Status)
                 {
-                    case "Going": going++; break;
+                    case "Going": if (!r.IsWaitlisted) going++; break;
                     case "Maybe": maybe++; break;
                     case "Not Going": notGoing++; break;
                 }
@@ -205,8 +205,10 @@ namespace EventEase.Services
                 Date = e.Date,
                 Time = e.Time,
                 Status = e.Status,
+                Capacity = e.Capacity,
                 CreatedAt = e.CreatedAt,
                 TotalRSVPs = total,
+                WaitlistedCount = e.RSVPs.Count(r => r.IsWaitlisted),
                 GoingCount = going,
                 MaybeCount = maybe,
                 NotGoingCount = notGoing,
