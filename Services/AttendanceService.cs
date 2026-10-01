@@ -144,7 +144,7 @@ namespace EventEase.Services
                 var dupCheckedTask = _attendanceRepository.GetCheckedInCountByEventIdAsync(rsvp.EventId);
                 await Task.WhenAll(dupTotalTask, dupGoingTask, dupCheckedTask);
 
-                var dupRate = dupGoingTask.Result > 0 ? Math.Round((double)dupCheckedTask.Result / dupGoingTask.Result * 100, 1) : 0.0;
+                var dupRate = dupGoingTask.Result > 0 ? Math.Min(100, Math.Round((double)dupCheckedTask.Result / dupGoingTask.Result * 100, 1)) : 0.0;
 
                 return new CheckInResultViewModel
                 {
@@ -168,12 +168,14 @@ namespace EventEase.Services
             var checkedInTask = _attendanceRepository.GetCheckedInCountByEventIdAsync(rsvp.EventId);
             await Task.WhenAll(totalRSVPsTask, goingTask, checkedInTask);
 
-            var rate = goingTask.Result > 0 ? Math.Round((double)checkedInTask.Result / goingTask.Result * 100, 1) : 0.0;
+            var rate = goingTask.Result > 0 ? Math.Min(100, Math.Round((double)checkedInTask.Result / goingTask.Result * 100, 1)) : 0.0;
 
             return new CheckInResultViewModel
             {
                 Success = true,
-                Message = $"{rsvp.FullName} successfully checked in!",
+                Message = updatedAttendance.WasAlreadyCheckedIn
+                    ? "Attendee was already checked in."
+                    : $"{rsvp.FullName} successfully checked in!",
                 RsvpId = rsvpId,
                 CheckedIn = true,
                 CheckedInTime = updatedAttendance.CheckedInTime?.ToLocalTime().ToString("hh:mm tt") ?? DateTime.Now.ToString("hh:mm tt"),
@@ -208,7 +210,7 @@ namespace EventEase.Services
             var checkedInTask = _attendanceRepository.GetCheckedInCountByEventIdAsync(rsvp.EventId);
             await Task.WhenAll(totalRSVPsTask, goingTask, checkedInTask);
 
-            var rate = goingTask.Result > 0 ? Math.Round((double)checkedInTask.Result / goingTask.Result * 100, 1) : 0.0;
+            var rate = goingTask.Result > 0 ? Math.Min(100, Math.Round((double)checkedInTask.Result / goingTask.Result * 100, 1)) : 0.0;
 
             return new CheckInResultViewModel
             {

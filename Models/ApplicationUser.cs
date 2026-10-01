@@ -33,6 +33,7 @@ namespace EventEase.Models
 
         // Navigation property for events (loaded dynamically in memory)
         [BsonIgnore]
+        [System.Text.Json.Serialization.JsonIgnore]
         public virtual ICollection<Event> Events { get; set; } = new List<Event>();
     }
 }

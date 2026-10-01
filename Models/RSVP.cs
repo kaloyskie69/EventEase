@@ -19,6 +19,7 @@ namespace EventEase.Models
         public int EventId { get; set; }
 
         [BsonIgnore]
+        [System.Text.Json.Serialization.JsonIgnore]
         public virtual Event? Event { get; set; }
 
         [Required(ErrorMessage = "Full Name is required.")]

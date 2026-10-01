@@ -72,6 +72,7 @@ builder.Services.AddRateLimiter(options =>
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
     options.OnRejected = async (context, cancellationToken) =>
     {
+        context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
         context.HttpContext.Response.ContentType = "text/html; charset=utf-8";
         await context.HttpContext.Response.WriteAsync(
             "<!doctype html><html lang=\"en\"><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><title>Please wait</title><body style=\"font:16px system-ui;max-width:38rem;margin:12vh auto;padding:1rem\"><h1>Please wait before trying again</h1><p>Too many RSVP submissions came from this connection. Wait a few minutes, then return to the event page and try again.</p></body></html>",

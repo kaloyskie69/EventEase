@@ -18,6 +18,7 @@ namespace EventEase.Models
         public string OrganizerId { get; set; } = string.Empty;
 
         [BsonIgnore]
+        [System.Text.Json.Serialization.JsonIgnore]
         public virtual ApplicationUser? Organizer { get; set; }
 
         [Required(ErrorMessage = "Event title is required.")]
@@ -65,6 +66,7 @@ namespace EventEase.Models
         /// Related RSVPs associated in-memory for views and reporting.
         /// </summary>
         [BsonIgnore]
+        [System.Text.Json.Serialization.JsonIgnore]
         public virtual List<RSVP> RSVPs { get; set; } = new List<RSVP>();
     }
 }

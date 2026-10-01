@@ -25,7 +25,9 @@ namespace EventEase.ViewModels.RSVP
                 var dt = Date.Date;
                 if (!string.IsNullOrWhiteSpace(Time))
                 {
-                    if (DateTime.TryParse(Time, out var parsed))
+                    var startText = Time.Split(new[] { '-', '–', '—' }, StringSplitOptions.RemoveEmptyEntries)
+                        .FirstOrDefault()?.Trim();
+                    if (!string.IsNullOrWhiteSpace(startText) && DateTime.TryParse(startText, out var parsed))
                     {
                         return dt.Add(parsed.TimeOfDay);
                     }

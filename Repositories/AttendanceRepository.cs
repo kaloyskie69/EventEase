@@ -77,6 +77,7 @@ namespace EventEase.Repositories
                 // Subsequent check-in: verify not already checked in to prevent race
                 if (attendance.CheckedIn)
                 {
+                    attendance.WasAlreadyCheckedIn = true;
                     // Already checked in by concurrent request — return current state
                     return attendance;
                 }

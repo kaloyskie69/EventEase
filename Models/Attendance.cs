@@ -18,10 +18,15 @@ namespace EventEase.Models
         public int EventId { get; set; }
 
         [BsonIgnore]
+        [System.Text.Json.Serialization.JsonIgnore]
         public virtual RSVP? RSVP { get; set; }
 
         public bool CheckedIn { get; set; } = false;
 
         public DateTime? CheckedInTime { get; set; }
+
+        [BsonIgnore]
+        [System.Text.Json.Serialization.JsonIgnore]
+        public bool WasAlreadyCheckedIn { get; set; }
     }
 }

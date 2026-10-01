@@ -16,6 +16,7 @@ namespace EventEase.Models
         public int CustomFieldId { get; set; }
 
         [BsonIgnore]
+        [System.Text.Json.Serialization.JsonIgnore]
         public virtual CustomField? CustomField { get; set; }
 
         [StringLength(2000)]
