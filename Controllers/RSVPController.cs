@@ -135,9 +135,20 @@ namespace EventEase.Controllers
             }
 
             var startDateTime = ev.Date.Date.AddHours(9); // Default fallback
+            var endDateTime = startDateTime.AddHours(2);   // Default duration
             if (!string.IsNullOrWhiteSpace(ev.Time))
             {
-                if (DateTime.TryParse(ev.Time, out var parsedDt))
+                // Try to parse time range like "09:00 AM - 05:00 PM"
+                var timeParts = ev.Time.Split(new[] { '-', '–', '—' }, StringSplitOptions.RemoveEmptyEntries);
+                if (timeParts.Length >= 1 && DateTime.TryParse(timeParts[0].Trim(), out var parsedStart))
+                {
+                    startDateTime = ev.Date.Date.Add(parsedStart.TimeOfDay);
+                }
+                if (timeParts.Length >= 2 && DateTime.TryParse(timeParts[1].Trim(), out var parsedEnd))
+                {
+                    endDateTime = ev.Date.Date.Add(parsedEnd.TimeOfDay);
+                }
+                else if (DateTime.TryParse(ev.Time, out var parsedDt))
                 {
                     startDateTime = ev.Date.Date.Add(parsedDt.TimeOfDay);
                 }
@@ -146,7 +157,6 @@ namespace EventEase.Controllers
                     startDateTime = ev.Date.Date.Add(parsedTs);
                 }
             }
-            var endDateTime = startDateTime.AddHours(2);
 
             var sb = new StringBuilder();
             sb.AppendLine("BEGIN:VCALENDAR");

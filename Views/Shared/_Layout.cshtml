@@ -33,6 +33,7 @@
                     <!-- Top Bar Search with / keyboard shortcut badge -->
                     <div class="octo-search-container d-none d-md-block ms-2">
                         <form method="get" asp-controller="Events" asp-action="Index" class="m-0">
+                            <input type="hidden" name="status" value="@(ViewBag.CurrentStatus ?? "All")" />
                             <input type="text" name="search" class="octo-search-input" placeholder="Search events..." id="globalSearchInput" />
                             <kbd class="octo-search-kbd">/</kbd>
                         </form>

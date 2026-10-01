@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -28,6 +29,9 @@ namespace EventEase.Data
             PropertyNameCaseInsensitive = true
         };
         private bool _disposed = false;
+
+        // Cache compiled expressions to avoid repeated delegate creation overhead
+        private static readonly ConcurrentDictionary<string, Delegate> _compiledCache = new();
 
         public JsonDocumentCollection(string dataDirectory, string collectionName)
         {
@@ -90,6 +94,12 @@ namespace EventEase.Data
                 Timeout.Infinite); // Execute once, then stop
         }
 
+        private static Func<T, bool> GetCompiledFilter(Expression<Func<T, bool>> filter)
+        {
+            var key = filter.ToString();
+            return (Func<T, bool>)_compiledCache.GetOrAdd(key, _ => filter.Compile());
+        }
+
         public async Task<List<T>> FindAllAsync()
         {
             await _lock.WaitAsync();
@@ -108,7 +118,7 @@ namespace EventEase.Data
             await _lock.WaitAsync();
             try
             {
-                var compiled = filter.Compile();
+                var compiled = GetCompiledFilter(filter);
                 return _data.Where(compiled).ToList();
             }
             finally
@@ -122,7 +132,7 @@ namespace EventEase.Data
             await _lock.WaitAsync();
             try
             {
-                var compiled = filter.Compile();
+                var compiled = GetCompiledFilter(filter);
                 return _data.FirstOrDefault(compiled);
             }
             finally
@@ -137,7 +147,8 @@ namespace EventEase.Data
             try
             {
                 if (!_data.Any()) return 0;
-                var compiled = idSelector.Compile();
+                var key = idSelector.ToString();
+                var compiled = (Func<T, int>)_compiledCache.GetOrAdd(key, _ => idSelector.Compile());
                 return _data.Max(compiled);
             }
             finally
@@ -181,7 +192,7 @@ namespace EventEase.Data
             await _lock.WaitAsync();
             try
             {
-                var compiled = filter.Compile();
+                var compiled = GetCompiledFilter(filter);
                 var index = _data.FindIndex(new Predicate<T>(compiled));
                 if (index >= 0)
                 {
@@ -204,7 +215,7 @@ namespace EventEase.Data
             await _lock.WaitAsync();
             try
             {
-                var compiled = filter.Compile();
+                var compiled = GetCompiledFilter(filter);
                 var index = _data.FindIndex(new Predicate<T>(compiled));
                 if (index >= 0)
                 {
@@ -223,7 +234,7 @@ namespace EventEase.Data
             await _lock.WaitAsync();
             try
             {
-                var compiled = filter.Compile();
+                var compiled = GetCompiledFilter(filter);
                 _data.RemoveAll(new Predicate<T>(compiled));
                 SaveToDisk();
             }
@@ -238,7 +249,7 @@ namespace EventEase.Data
             await _lock.WaitAsync();
             try
             {
-                var compiled = filter.Compile();
+                var compiled = GetCompiledFilter(filter);
                 return _data.Count(compiled);
             }
             finally

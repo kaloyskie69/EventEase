@@ -33,7 +33,7 @@ namespace EventEase.Controllers
         }
 
         [HttpPost]
-        [IgnoreAntiforgeryToken] // Enabled for seamless AJAX check-in calls with JSON payloads
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> ToggleCheckIn([FromBody] CheckInToggleRequest request)
         {
             if (request == null || request.RsvpId <= 0)
