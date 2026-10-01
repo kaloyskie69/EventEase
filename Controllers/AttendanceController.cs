@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using System.Security.Claims;
 using EventEase.Interfaces;
 using EventEase.ViewModels.Attendance;
 using Microsoft.AspNetCore.Authorization;
@@ -22,7 +23,10 @@ namespace EventEase.Controllers
             ViewBag.CurrentSearch = search ?? string.Empty;
             ViewBag.CurrentFilter = filter ?? "All";
 
-            var roster = await _attendanceService.GetCheckInRosterAsync(eventId, search, filter);
+            var organizerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(organizerId)) return Challenge();
+
+            var roster = await _attendanceService.GetCheckInRosterAsync(eventId, organizerId, search, filter);
             if (roster == null)
             {
                 TempData["ErrorMessage"] = "Event not found.";
@@ -41,7 +45,10 @@ namespace EventEase.Controllers
                 return Json(new { success = false, message = "Invalid request payload." });
             }
 
-            var result = await _attendanceService.ToggleCheckInAsync(request.RsvpId, request.Undo);
+            var organizerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(organizerId)) return Unauthorized();
+
+            var result = await _attendanceService.ToggleCheckInAsync(request.RsvpId, organizerId, request.Undo);
             return Json(result);
         }
 
@@ -49,7 +56,9 @@ namespace EventEase.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> MarkCheckIn(int rsvpId, int eventId)
         {
-            var result = await _attendanceService.CheckInAttendeeAsync(rsvpId);
+            var organizerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(organizerId)) return Challenge();
+            var result = await _attendanceService.CheckInAttendeeAsync(rsvpId, organizerId);
             if (result.Success)
             {
                 TempData["SuccessMessage"] = result.Message;
@@ -66,7 +75,9 @@ namespace EventEase.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> UndoCheckIn(int rsvpId, int eventId)
         {
-            var result = await _attendanceService.UndoCheckInAttendeeAsync(rsvpId);
+            var organizerId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(organizerId)) return Challenge();
+            var result = await _attendanceService.UndoCheckInAttendeeAsync(rsvpId, organizerId);
             if (result.Success)
             {
                 TempData["SuccessMessage"] = result.Message;

@@ -1,6 +1,8 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using EventEase.Models;
 using Microsoft.Extensions.Configuration;
@@ -25,6 +27,8 @@ namespace EventEase.Data
 
         private IMongoDatabase? _mongoDatabase;
         private readonly bool _isMongoMode;
+        private readonly SemaphoreSlim _jsonCounterLock = new(1, 1);
+        private readonly Dictionary<string, int> _jsonCounters = new();
 
         public bool IsConnectedToLiveMongo { get; private set; }
         public string ConnectionInfo { get; private set; } = string.Empty;
@@ -144,15 +148,31 @@ namespace EventEase.Data
                 return result.Value;
             }
 
-            // JSON mode: fall back to max+1 (single-threaded local mode is safe)
-            return counterName switch
+            // Read each collection maximum once, then allocate IDs from memory. This
+            // avoids rescanning every stored document for each new event or RSVP.
+            await _jsonCounterLock.WaitAsync();
+            try
             {
-                "EventId" => (await Events.GetMaxIdAsync(e => e.Id)) + 1,
-                "RsvpId" => (await RSVPs.GetMaxIdAsync(r => r.Id)) + 1,
-                "AttendanceId" => (await Attendances.GetMaxIdAsync(a => a.Id)) + 1,
-                "CustomFieldId" => await GetMaxCustomFieldIdAsync() + 1,
-                _ => throw new ArgumentException($"Unknown counter: {counterName}")
-            };
+                if (!_jsonCounters.TryGetValue(counterName, out var current))
+                {
+                    current = counterName switch
+                    {
+                        "EventId" => await Events.GetMaxIdAsync(e => e.Id),
+                        "RsvpId" => await RSVPs.GetMaxIdAsync(r => r.Id),
+                        "AttendanceId" => await Attendances.GetMaxIdAsync(a => a.Id),
+                        "CustomFieldId" => await GetMaxCustomFieldIdAsync(),
+                        _ => throw new ArgumentException($"Unknown counter: {counterName}")
+                    };
+                }
+
+                var next = checked(current + 1);
+                _jsonCounters[counterName] = next;
+                return next;
+            }
+            finally
+            {
+                _jsonCounterLock.Release();
+            }
         }
 
         private async Task<int> GetMaxCustomFieldIdAsync()

@@ -9,6 +9,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (!container || !addBtn) return;
 
+    // Existing custom field values can come from persisted organizer input.
+    // Escape them before placing them in the row template to prevent stored XSS.
+    function escapeHtml(value) {
+        return String(value == null ? '' : value).replace(/[&<>"']/g, function (character) {
+            return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[character];
+        });
+    }
+
     // Helper: Re-index field names for ASP.NET MVC model binding
     function reindexCustomFields() {
         var rows = container.querySelectorAll('.custom-field-row');
@@ -62,7 +70,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     <label class="form-label small text-muted mb-1">Question / Label <span class="text-danger">*</span></label>
                     <input type="text" class="form-control form-control-sm field-label" 
                            placeholder="e.g. Dietary Restriction, Student Number" 
-                           value="${labelVal || ''}" required />
+                           value="${escapeHtml(labelVal)}" required />
                 </div>
                 <div class="col-md-3">
                     <label class="form-label small text-muted mb-1">Answer Type</label>
@@ -90,7 +98,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     <label class="form-label small text-muted mb-1">Dropdown Choices (comma-separated)</label>
                     <input type="text" class="form-control form-control-sm field-options" 
                            placeholder="e.g. Vegetarian, Vegan, Halal, Gluten-Free" 
-                           value="${optionsVal || ''}" />
+                           value="${escapeHtml(optionsVal)}" />
                 </div>
             </div>
         `;

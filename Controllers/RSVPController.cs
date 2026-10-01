@@ -139,7 +139,7 @@ namespace EventEase.Controllers
             if (!string.IsNullOrWhiteSpace(ev.Time))
             {
                 // Try to parse time range like "09:00 AM - 05:00 PM"
-                var timeParts = ev.Time.Split(new[] { '-', '–', '—' }, StringSplitOptions.RemoveEmptyEntries);
+                var timeParts = ev.Time.Split(new[] { "-", "–", "—" }, StringSplitOptions.RemoveEmptyEntries);
                 if (timeParts.Length >= 1 && DateTime.TryParse(timeParts[0].Trim(), out var parsedStart))
                 {
                     startDateTime = ev.Date.Date.Add(parsedStart.TimeOfDay);
@@ -165,16 +165,28 @@ namespace EventEase.Controllers
             sb.AppendLine("BEGIN:VEVENT");
             sb.AppendLine($"UID:{Guid.NewGuid()}@eventease.com");
             sb.AppendLine($"DTSTAMP:{DateTime.UtcNow:yyyyMMddTHHmmssZ}");
-            sb.AppendLine($"DTSTART:{startDateTime:yyyyMMddTHHmmssZ}");
-            sb.AppendLine($"DTEND:{endDateTime:yyyyMMddTHHmmssZ}");
-            sb.AppendLine($"SUMMARY:{ev.Title}");
-            sb.AppendLine($"DESCRIPTION:{ev.Description?.Replace("\r\n", " ") ?? ev.Title}");
-            sb.AppendLine($"LOCATION:{ev.Venue}");
+            // No event time zone is configured; floating local times avoid falsely labeling
+            // organizer-entered times as UTC.
+            sb.AppendLine($"DTSTART:{startDateTime:yyyyMMdd'T'HHmmss}");
+            sb.AppendLine($"DTEND:{endDateTime:yyyyMMdd'T'HHmmss}");
+            sb.AppendLine($"SUMMARY:{EscapeCalendarText(ev.Title)}");
+            sb.AppendLine($"DESCRIPTION:{EscapeCalendarText(ev.Description ?? ev.Title)}");
+            sb.AppendLine($"LOCATION:{EscapeCalendarText(ev.Venue)}");
             sb.AppendLine("END:VEVENT");
             sb.AppendLine("END:VCALENDAR");
 
             var bytes = Encoding.UTF8.GetBytes(sb.ToString());
             return File(bytes, "text/calendar", $"{ev.Title.Replace(" ", "_")}.ics");
+        }
+
+        private static string EscapeCalendarText(string value)
+        {
+            return value.Replace("\\", "\\\\")
+                .Replace("\r\n", "\\n")
+                .Replace("\n", "\\n")
+                .Replace("\r", "\\n")
+                .Replace(";", "\\;")
+                .Replace(",", "\\,");
         }
     }
 }

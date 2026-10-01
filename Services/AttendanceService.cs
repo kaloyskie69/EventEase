@@ -23,10 +23,10 @@ namespace EventEase.Services
             _attendanceRepository = attendanceRepository;
         }
 
-        public async Task<AttendanceCheckInViewModel?> GetCheckInRosterAsync(int eventId, string? searchQuery = null, string? statusFilter = null)
+        public async Task<AttendanceCheckInViewModel?> GetCheckInRosterAsync(int eventId, string organizerId, string? searchQuery = null, string? statusFilter = null)
         {
             var ev = await _eventRepository.GetByIdWithDetailsAsync(eventId);
-            if (ev == null) return null;
+            if (ev == null || ev.OrganizerId != organizerId) return null;
 
             var rsvps = ev.RSVPs.AsEnumerable();
 
@@ -103,16 +103,16 @@ namespace EventEase.Services
             };
         }
 
-        public async Task<CheckInResultViewModel> ToggleCheckInAsync(int rsvpId, bool undo = false)
+        public async Task<CheckInResultViewModel> ToggleCheckInAsync(int rsvpId, string organizerId, bool undo = false)
         {
             if (undo)
             {
-                return await UndoCheckInAttendeeAsync(rsvpId);
+                return await UndoCheckInAttendeeAsync(rsvpId, organizerId);
             }
-            return await CheckInAttendeeAsync(rsvpId);
+            return await CheckInAttendeeAsync(rsvpId, organizerId);
         }
 
-        public async Task<CheckInResultViewModel> CheckInAttendeeAsync(int rsvpId)
+        public async Task<CheckInResultViewModel> CheckInAttendeeAsync(int rsvpId, string organizerId)
         {
             var rsvp = await _rsvpRepository.GetByIdAsync(rsvpId);
             if (rsvp == null)
@@ -123,6 +123,10 @@ namespace EventEase.Services
                     Message = "Attendee RSVP record not found."
                 };
             }
+
+            var ev = await _eventRepository.GetByIdAsync(rsvp.EventId);
+            if (ev == null || ev.OrganizerId != organizerId)
+                return new CheckInResultViewModel { Success = false, Message = "Attendee RSVP record not found." };
 
             var existingAttendance = await _attendanceRepository.GetByRsvpIdAsync(rsvpId);
             if (existingAttendance != null && existingAttendance.CheckedIn)
@@ -173,7 +177,7 @@ namespace EventEase.Services
             };
         }
 
-        public async Task<CheckInResultViewModel> UndoCheckInAttendeeAsync(int rsvpId)
+        public async Task<CheckInResultViewModel> UndoCheckInAttendeeAsync(int rsvpId, string organizerId)
         {
             var rsvp = await _rsvpRepository.GetByIdAsync(rsvpId);
             if (rsvp == null)
@@ -184,6 +188,10 @@ namespace EventEase.Services
                     Message = "Attendee RSVP record not found."
                 };
             }
+
+            var ev = await _eventRepository.GetByIdAsync(rsvp.EventId);
+            if (ev == null || ev.OrganizerId != organizerId)
+                return new CheckInResultViewModel { Success = false, Message = "Attendee RSVP record not found." };
 
             await _attendanceRepository.UndoCheckInAsync(rsvpId);
 

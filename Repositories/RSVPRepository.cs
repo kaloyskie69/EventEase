@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using EventEase.Data;
 using EventEase.Interfaces;
 using EventEase.Models;
+using MongoDB.Driver;
 
 namespace EventEase.Repositories
 {
@@ -14,6 +15,7 @@ namespace EventEase.Repositories
     /// </summary>
     public class RSVPRepository : IRSVPRepository
     {
+        private static readonly SemaphoreSlim SubmissionLock = new(1, 1);
         private readonly MongoDbContext _context;
 
         public RSVPRepository(MongoDbContext context)
@@ -87,45 +89,64 @@ namespace EventEase.Repositories
 
         public async Task<bool> ExistsByEmailAsync(int eventId, string email)
         {
-            var normalizedEmail = email.Trim().ToLower();
-            var matches = await _context.RSVPs.FindAsync(r => r.EventId == eventId);
-            return matches.Any(r => r.Email.Trim().Equals(normalizedEmail, StringComparison.OrdinalIgnoreCase));
+            var normalizedEmail = email.Trim().ToLowerInvariant();
+            return await _context.RSVPs.FindOneAsync(r => r.EventId == eventId && r.Email == normalizedEmail) != null;
         }
 
         public async Task<RSVP> AddAsync(RSVP rsvp, IEnumerable<CustomFieldResponse>? responses = null)
         {
-            if (rsvp.Id <= 0)
+            await SubmissionLock.WaitAsync();
+            try
             {
-                rsvp.Id = await _context.GetNextRsvpIdAsync();
-            }
-
-            if (responses != null && responses.Any())
-            {
-                var nextId = 1;
-                foreach (var resp in responses)
+                if (await ExistsByEmailAsync(rsvp.EventId, rsvp.Email))
                 {
-                    resp.Id = nextId++;
-                    resp.RSVPId = rsvp.Id;
-                    rsvp.CustomFieldResponses.Add(resp);
+                    throw new DuplicateRsvpException();
                 }
+
+                if (rsvp.Id <= 0)
+                {
+                    rsvp.Id = await _context.GetNextRsvpIdAsync();
+                }
+
+                if (responses != null && responses.Any())
+                {
+                    var nextId = 1;
+                    foreach (var resp in responses)
+                    {
+                        resp.Id = nextId++;
+                        resp.RSVPId = rsvp.Id;
+                        rsvp.CustomFieldResponses.Add(resp);
+                    }
+                }
+
+                // Create initial Attendance record (CheckedIn = false)
+                var attendance = new Attendance
+                {
+                    Id = await _context.GetNextAttendanceIdAsync(),
+                    RSVPId = rsvp.Id,
+                    EventId = rsvp.EventId,
+                    CheckedIn = false,
+                    CheckedInTime = null
+                };
+
+                rsvp.Attendance = attendance;
+
+                try
+                {
+                    await _context.RSVPs.InsertOneAsync(rsvp);
+                }
+                catch (MongoWriteException ex) when (ex.WriteError?.Code == 11000)
+                {
+                    throw new DuplicateRsvpException();
+                }
+                await _context.Attendances.InsertOneAsync(attendance);
+
+                return rsvp;
             }
-
-            // Create initial Attendance record (CheckedIn = false)
-            var attendance = new Attendance
+            finally
             {
-                Id = await _context.GetNextAttendanceIdAsync(),
-                RSVPId = rsvp.Id,
-                EventId = rsvp.EventId,
-                CheckedIn = false,
-                CheckedInTime = null
-            };
-
-            rsvp.Attendance = attendance;
-
-            await _context.RSVPs.InsertOneAsync(rsvp);
-            await _context.Attendances.InsertOneAsync(attendance);
-
-            return rsvp;
+                SubmissionLock.Release();
+            }
         }
 
         public async Task<int> GetCountByEventIdAsync(int eventId)
@@ -139,5 +160,10 @@ namespace EventEase.Repositories
             var count = await _context.RSVPs.CountDocumentsAsync(r => r.EventId == eventId && r.Status == status);
             return (int)count;
         }
+    }
+
+    public sealed class DuplicateRsvpException : Exception
+    {
+        public DuplicateRsvpException() : base("An RSVP with this email has already been submitted for this event.") { }
     }
 }
