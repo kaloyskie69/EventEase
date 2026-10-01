@@ -37,6 +37,7 @@ namespace EventEase.ViewModels.Event
         public int? Capacity { get; set; }
 
         [Required]
+        [RegularExpression("^(Upcoming|Completed|Cancelled)$", ErrorMessage = "Choose a valid event status.")]
         [Display(Name = "Event Status")]
         public string Status { get; set; } = "Upcoming"; // Upcoming, Completed, Cancelled
 

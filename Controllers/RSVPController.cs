@@ -110,19 +110,21 @@ namespace EventEase.Controllers
             }
 
             TempData["SuccessMessage"] = "Thank you! Your RSVP has been confirmed.";
-            return RedirectToAction(nameof(Confirmation), new { id = result.RsvpId });
+            return RedirectToAction(nameof(Confirmation), new { id = result.RsvpId, token = result.ConfirmationToken });
         }
 
         [HttpGet]
         [Route("RSVP/Confirmation/{id:int}")]
-        public async Task<IActionResult> Confirmation(int id)
+        public async Task<IActionResult> Confirmation(int id, string? token)
         {
-            var confirmation = await _rsvpService.GetConfirmationAsync(id);
+            var confirmation = await _rsvpService.GetConfirmationAsync(id, token);
             if (confirmation == null)
             {
                 return NotFound();
             }
 
+            Response.Headers["Cache-Control"] = "no-store";
+            Response.Headers["Referrer-Policy"] = "no-referrer";
             return View(confirmation);
         }
 
@@ -160,12 +162,17 @@ namespace EventEase.Controllers
                 }
             }
 
+            if (endDateTime <= startDateTime)
+            {
+                endDateTime = startDateTime.AddHours(2);
+            }
+
             var sb = new StringBuilder();
             sb.AppendLine("BEGIN:VCALENDAR");
             sb.AppendLine("VERSION:2.0");
             sb.AppendLine("PRODID:-//EventEase//Event RSVP System//EN");
             sb.AppendLine("BEGIN:VEVENT");
-            sb.AppendLine($"UID:{Guid.NewGuid()}@eventease.com");
+            sb.AppendLine($"UID:{ev.Id}@eventease.com");
             sb.AppendLine($"DTSTAMP:{DateTime.UtcNow:yyyyMMddTHHmmssZ}");
             // No event time zone is configured; floating local times avoid falsely labeling
             // organizer-entered times as UTC.

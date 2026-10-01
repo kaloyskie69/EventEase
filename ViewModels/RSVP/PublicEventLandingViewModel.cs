@@ -16,7 +16,7 @@ namespace EventEase.ViewModels.RSVP
         public int GoingCount { get; set; }
         public int? Capacity { get; set; }
         public bool CapacityReached => Capacity.HasValue && GoingCount >= Capacity.Value;
-        public bool IsEventActive => Status == "Upcoming" && Date.Date >= DateTime.Today;
+        public bool IsEventActive => Status == "Upcoming" && EventDateTime >= DateTime.Now;
 
         public DateTime EventDateTime
         {

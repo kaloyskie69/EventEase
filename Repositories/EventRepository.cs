@@ -114,6 +114,17 @@ namespace EventEase.Repositories
             return ev;
         }
 
+        public async Task<Event?> GetByIdWithOrganizerAsync(int id)
+        {
+            var ev = await _context.Events.FindOneAsync(e => e.Id == id);
+            if (ev != null && !string.IsNullOrEmpty(ev.OrganizerId))
+            {
+                ev.Organizer = await _context.Users.FindOneAsync(u => u.Id == ev.OrganizerId);
+            }
+
+            return ev;
+        }
+
         public async Task<Event?> GetByIdWithCustomFieldsAsync(int id)
         {
             // In NoSQL MongoDB, CustomFields are already embedded directly in the Event document!
@@ -195,6 +206,7 @@ namespace EventEase.Repositories
                 var ev = await _context.Events.FindOneAsync(e => e.Id == group.Key);
                 if (ev != null)
                 {
+                    ev.CustomFields ??= new List<CustomField>();
                     foreach (var cf in group)
                     {
                         if (cf.Id <= 0)
@@ -214,6 +226,7 @@ namespace EventEase.Repositories
             var ev = await _context.Events.FindOneAsync(e => e.Id == eventId);
             if (ev != null)
             {
+                ev.CustomFields ??= new List<CustomField>();
                 ev.CustomFields.Clear();
                 await _context.Events.ReplaceOneAsync(e => e.Id == ev.Id, ev);
             }

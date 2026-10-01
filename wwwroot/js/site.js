@@ -124,23 +124,31 @@ function showToast(title, message, isError) {
         document.body.appendChild(toastContainer);
     }
 
-    var toastHtml = `
-        <div class="toast align-items-center ${isError ? 'text-bg-danger' : 'text-bg-dark'} border-0 shadow-lg" role="alert" aria-live="assertive" aria-atomic="true">
-            <div class="d-flex">
-                <div class="toast-body d-flex align-items-center gap-2">
-                    <i class="bi ${isError ? 'bi-exclamation-triangle-fill' : 'bi-check-circle-fill'} fs-5 text-white"></i>
-                    <div>
-                        <strong>${title}:</strong> ${message}
-                    </div>
-                </div>
-                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
-            </div>
-        </div>
-    `;
+    var newToast = document.createElement('div');
+    newToast.className = `toast align-items-center ${isError ? 'text-bg-danger' : 'text-bg-dark'} border-0 shadow-lg`;
+    newToast.setAttribute('role', 'alert');
+    newToast.setAttribute('aria-live', 'assertive');
+    newToast.setAttribute('aria-atomic', 'true');
 
-    var div = document.createElement('div');
-    div.innerHTML = toastHtml.trim();
-    var newToast = div.firstChild;
+    var row = document.createElement('div');
+    row.className = 'd-flex';
+    var body = document.createElement('div');
+    body.className = 'toast-body d-flex align-items-center gap-2';
+    var icon = document.createElement('i');
+    icon.className = `bi ${isError ? 'bi-exclamation-triangle-fill' : 'bi-check-circle-fill'} fs-5 text-white`;
+    var text = document.createElement('div');
+    var heading = document.createElement('strong');
+    heading.textContent = `${title}:`;
+    text.append(heading, document.createTextNode(` ${message}`));
+    body.append(icon, text);
+
+    var closeButton = document.createElement('button');
+    closeButton.type = 'button';
+    closeButton.className = 'btn-close btn-close-white me-2 m-auto';
+    closeButton.setAttribute('data-bs-dismiss', 'toast');
+    closeButton.setAttribute('aria-label', 'Close');
+    row.append(body, closeButton);
+    newToast.appendChild(row);
     toastContainer.appendChild(newToast);
 
     var bsToast = new bootstrap.Toast(newToast, { delay: 4000 });

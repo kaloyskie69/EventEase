@@ -71,13 +71,13 @@ namespace EventEase.Services
             {
                 switch (r.Status)
                 {
-                    case "Going": if (!r.IsWaitlisted) goingRsvps++; break;
+                    case "Going": if (r.IsWaitlisted != true) goingRsvps++; break;
                     case "Maybe": maybeRsvps++; break;
                     case "Not Going": notGoingRsvps++; break;
                 }
                 if (r.Attendance != null && r.Attendance.CheckedIn) totalCheckedIn++;
             }
-            var overallAttendanceRate = goingRsvps > 0 ? Math.Round((double)totalCheckedIn / goingRsvps * 100, 1) : 0.0;
+            var overallAttendanceRate = goingRsvps > 0 ? Math.Min(100, Math.Round((double)totalCheckedIn / goingRsvps * 100, 1)) : 0.0;
 
             // Map list view models
             var upcomingList = events.Where(e => e.Date.Date >= today && e.Status != "Cancelled")
@@ -141,14 +141,14 @@ namespace EventEase.Services
                 .Take(5)
                 .Select(e =>
                 {
-                    var going = e.RSVPs.Count(r => r.Status == "Going" && !r.IsWaitlisted);
+                    var going = e.RSVPs.Count(r => r.Status == "Going" && r.IsWaitlisted != true);
                     var checkedIn = e.RSVPs.Count(r => r.Attendance != null && r.Attendance.CheckedIn);
                     return new EventAttendanceStatViewModel
                     {
                         EventTitle = e.Title.Length > 20 ? e.Title.Substring(0, 17) + "..." : e.Title,
                         TotalRSVP = e.RSVPs.Count,
                         CheckedIn = checkedIn,
-                        Percentage = going > 0 ? Math.Round((double)checkedIn / going * 100, 1) : 0.0
+                        Percentage = going > 0 ? Math.Min(100, Math.Round((double)checkedIn / going * 100, 1)) : 0.0
                     };
                 }).ToList();
 
@@ -188,13 +188,13 @@ namespace EventEase.Services
                 total++;
                 switch (r.Status)
                 {
-                    case "Going": if (!r.IsWaitlisted) going++; break;
+                    case "Going": if (r.IsWaitlisted != true) going++; break;
                     case "Maybe": maybe++; break;
                     case "Not Going": notGoing++; break;
                 }
                 if (r.Attendance != null && r.Attendance.CheckedIn) checkedIn++;
             }
-            var rate = going > 0 ? Math.Round((double)checkedIn / going * 100, 1) : 0.0;
+            var rate = going > 0 ? Math.Min(100, Math.Round((double)checkedIn / going * 100, 1)) : 0.0;
 
             return new EventListItemViewModel
             {
@@ -208,7 +208,7 @@ namespace EventEase.Services
                 Capacity = e.Capacity,
                 CreatedAt = e.CreatedAt,
                 TotalRSVPs = total,
-                WaitlistedCount = e.RSVPs.Count(r => r.IsWaitlisted),
+                WaitlistedCount = e.RSVPs.Count(r => r.IsWaitlisted == true),
                 GoingCount = going,
                 MaybeCount = maybe,
                 NotGoingCount = notGoing,

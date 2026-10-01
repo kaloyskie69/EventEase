@@ -61,7 +61,8 @@ builder.Services.AddRateLimiter(options =>
 {
     options.AddPolicy("rsvp-submit", context =>
         System.Threading.RateLimiting.RateLimitPartition.GetFixedWindowLimiter(
-            context.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            // Keep the partition count bounded if a client spoofs or rotates source IPs.
+            (StringComparer.Ordinal.GetHashCode(context.Connection.RemoteIpAddress?.ToString() ?? "unknown") & 1023).ToString(),
             _ => new System.Threading.RateLimiting.FixedWindowRateLimiterOptions
             {
                 PermitLimit = 10,
@@ -69,6 +70,13 @@ builder.Services.AddRateLimiter(options =>
                 QueueLimit = 0
             }));
     options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.OnRejected = async (context, cancellationToken) =>
+    {
+        context.HttpContext.Response.ContentType = "text/html; charset=utf-8";
+        await context.HttpContext.Response.WriteAsync(
+            "<!doctype html><html lang=\"en\"><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><title>Please wait</title><body style=\"font:16px system-ui;max-width:38rem;margin:12vh auto;padding:1rem\"><h1>Please wait before trying again</h1><p>Too many RSVP submissions came from this connection. Wait a few minutes, then return to the event page and try again.</p></body></html>",
+            cancellationToken);
+    };
 });
 
 var app = builder.Build();

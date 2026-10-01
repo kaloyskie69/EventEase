@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             // Resume context if suspended (e.g., from browser autoplay policy)
             if (audioCtx.state === 'suspended') {
-                audioCtx.resume();
+                audioCtx.resume().catch(function () { });
             }
 
             // Create temporary oscillator and gain nodes for this chime

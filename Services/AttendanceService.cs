@@ -53,9 +53,9 @@ namespace EventEase.Services
             }
 
             var totalRSVPs = ev.RSVPs.Count;
-            var totalGoing = ev.RSVPs.Count(r => r.Status == "Going" && !r.IsWaitlisted);
-            var totalCheckedIn = ev.RSVPs.Count(r => r.Attendance != null && r.Attendance.CheckedIn);
-            var percentage = totalGoing > 0 ? Math.Round((double)totalCheckedIn / totalGoing * 100, 1) : 0.0;
+            var totalGoing = ev.RSVPs.Count(r => r.Status == "Going" && r.IsWaitlisted != true);
+            var totalCheckedIn = ev.RSVPs.Count(r => r.Status == "Going" && r.IsWaitlisted != true && r.Attendance != null && r.Attendance.CheckedIn);
+            var percentage = totalGoing > 0 ? Math.Min(100, Math.Round((double)totalCheckedIn / totalGoing * 100, 1)) : 0.0;
 
             var customLabels = ev.CustomFields.Select(cf => cf.Label).ToList();
 
@@ -79,7 +79,7 @@ namespace EventEase.Services
                     Email = r.Email,
                     Phone = r.Phone,
                     Status = r.Status,
-                    IsWaitlisted = r.IsWaitlisted,
+                    IsWaitlisted = r.IsWaitlisted == true,
                     SubmittedAt = r.SubmittedAt,
                     CheckedIn = r.Attendance != null && r.Attendance.CheckedIn,
                     CheckedInTime = r.Attendance?.CheckedInTime,
@@ -129,8 +129,11 @@ namespace EventEase.Services
             if (ev == null || ev.OrganizerId != organizerId)
                 return new CheckInResultViewModel { Success = false, Message = "Attendee RSVP record not found." };
 
-            if (rsvp.IsWaitlisted)
+            if (rsvp.IsWaitlisted == true)
                 return new CheckInResultViewModel { Success = false, Message = "This attendee is on the waitlist and cannot be checked in." };
+
+            if (rsvp.Status != "Going")
+                return new CheckInResultViewModel { Success = false, Message = "Only attendees with a Going response can be checked in." };
 
             var existingAttendance = await _attendanceRepository.GetByRsvpIdAsync(rsvpId);
             if (existingAttendance != null && existingAttendance.CheckedIn)

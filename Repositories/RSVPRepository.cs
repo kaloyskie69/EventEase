@@ -15,7 +15,8 @@ namespace EventEase.Repositories
     /// </summary>
     public class RSVPRepository : IRSVPRepository
     {
-        private static readonly SemaphoreSlim SubmissionLock = new(1, 1);
+        private static readonly SemaphoreSlim[] SubmissionLocks =
+            Enumerable.Range(0, 64).Select(_ => new SemaphoreSlim(1, 1)).ToArray();
         private readonly MongoDbContext _context;
 
         public RSVPRepository(MongoDbContext context)
@@ -50,7 +51,7 @@ namespace EventEase.Repositories
                 {
                     foreach (var resp in rsvp.CustomFieldResponses)
                     {
-                        resp.CustomField = ev.CustomFields.FirstOrDefault(cf => cf.Id == resp.CustomFieldId);
+                        resp.CustomField = ev.CustomFields?.FirstOrDefault(cf => cf.Id == resp.CustomFieldId);
                     }
                 }
             }
@@ -80,7 +81,7 @@ namespace EventEase.Repositories
             {
                 foreach (var resp in rsvp.CustomFieldResponses)
                 {
-                    resp.CustomField = ev.CustomFields.FirstOrDefault(cf => cf.Id == resp.CustomFieldId);
+                    resp.CustomField = ev.CustomFields?.FirstOrDefault(cf => cf.Id == resp.CustomFieldId);
                 }
             }
 
@@ -95,7 +96,8 @@ namespace EventEase.Repositories
 
         public async Task<RSVP> AddAsync(RSVP rsvp, IEnumerable<CustomFieldResponse>? responses = null, int? capacity = null)
         {
-            await SubmissionLock.WaitAsync();
+            var submissionLock = GetSubmissionLock(rsvp.EventId);
+            await submissionLock.WaitAsync();
             try
             {
                 if (await ExistsByEmailAsync(rsvp.EventId, rsvp.Email))
@@ -120,7 +122,7 @@ namespace EventEase.Repositories
                     {
                         resp.Id = nextId++;
                         resp.RSVPId = rsvp.Id;
-                        rsvp.CustomFieldResponses.Add(resp);
+                        (rsvp.CustomFieldResponses ??= new List<CustomFieldResponse>()).Add(resp);
                     }
                 }
 
@@ -144,13 +146,22 @@ namespace EventEase.Repositories
                 {
                     throw new DuplicateRsvpException();
                 }
-                await _context.Attendances.InsertOneAsync(attendance);
+                try
+                {
+                    await _context.Attendances.InsertOneAsync(attendance);
+                }
+                catch
+                {
+                    // Keep the two related collections consistent if attendance creation fails.
+                    await _context.RSVPs.DeleteOneAsync(r => r.Id == rsvp.Id);
+                    throw;
+                }
 
                 return rsvp;
             }
             finally
             {
-                SubmissionLock.Release();
+                submissionLock.Release();
             }
         }
 
@@ -162,8 +173,41 @@ namespace EventEase.Repositories
 
         public async Task<int> GetCountByStatusAsync(int eventId, string status)
         {
-            var count = await _context.RSVPs.CountDocumentsAsync(r => r.EventId == eventId && r.Status == status && (status != "Going" || !r.IsWaitlisted));
+            var count = await _context.RSVPs.CountDocumentsAsync(r => r.EventId == eventId && r.Status == status && (status != "Going" || r.IsWaitlisted != true));
             return (int)count;
+        }
+
+        public async Task ReconcileCapacityAsync(int eventId, int? capacity)
+        {
+            var submissionLock = GetSubmissionLock(eventId);
+            await submissionLock.WaitAsync();
+            try
+            {
+                var going = (await _context.RSVPs.FindAsync(r => r.EventId == eventId && r.Status == "Going"))
+                    .OrderBy(r => r.IsWaitlisted == true)
+                    .ThenBy(r => r.SubmittedAt)
+                    .ToList();
+                var confirmedCount = capacity.HasValue ? Math.Min(capacity.Value, going.Count) : going.Count;
+
+                for (var index = 0; index < going.Count; index++)
+                {
+                    var shouldWaitlist = index >= confirmedCount;
+                    if ((going[index].IsWaitlisted == true) == shouldWaitlist) continue;
+
+                    going[index].IsWaitlisted = shouldWaitlist;
+                    await _context.RSVPs.ReplaceOneAsync(r => r.Id == going[index].Id, going[index]);
+                }
+            }
+            finally
+            {
+                submissionLock.Release();
+            }
+        }
+
+        private static SemaphoreSlim GetSubmissionLock(int eventId)
+        {
+            var stripe = (int)((uint)eventId % (uint)SubmissionLocks.Length);
+            return SubmissionLocks[stripe];
         }
     }
 

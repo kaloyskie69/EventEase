@@ -13,5 +13,6 @@ namespace EventEase.Interfaces
         Task<RSVP> AddAsync(RSVP rsvp, IEnumerable<CustomFieldResponse>? responses = null, int? capacity = null);
         Task<int> GetCountByEventIdAsync(int eventId);
         Task<int> GetCountByStatusAsync(int eventId, string status);
+        Task ReconcileCapacityAsync(int eventId, int? capacity);
     }
 }

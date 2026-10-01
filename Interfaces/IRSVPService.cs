@@ -6,8 +6,8 @@ namespace EventEase.Interfaces
     public interface IRSVPService
     {
         Task<PublicEventLandingViewModel?> GetPublicLandingAsync(int eventId);
-        Task<(bool Success, string? ErrorMessage, int RsvpId)> SubmitRSVPAsync(RSVPSubmitViewModel model);
-        Task<RSVPConfirmationViewModel?> GetConfirmationAsync(int rsvpId);
+        Task<(bool Success, string? ErrorMessage, int RsvpId, string? ConfirmationToken)> SubmitRSVPAsync(RSVPSubmitViewModel model);
+        Task<RSVPConfirmationViewModel?> GetConfirmationAsync(int rsvpId, string? confirmationToken);
         Task<bool> IsDuplicateEmailAsync(int eventId, string email);
     }
 }

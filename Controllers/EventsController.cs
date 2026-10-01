@@ -39,6 +39,16 @@ namespace EventEase.Controllers
         [HttpGet]
         public async Task<IActionResult> Details(int id)
         {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId)) return Challenge();
+
+            var ownedEvent = await _eventService.GetEventForEditAsync(id, userId);
+            if (ownedEvent == null)
+            {
+                TempData["ErrorMessage"] = "Event not found or access denied.";
+                return RedirectToAction(nameof(Index));
+            }
+
             var baseUrl = $"{Request.Scheme}://{Request.Host}";
             var model = await _eventService.GetEventDetailsAsync(id, baseUrl);
             if (model == null)
@@ -72,7 +82,7 @@ namespace EventEase.Controllers
             }
 
             // Server-side duplicate event prevention
-            if (await _eventService.IsTitleDuplicateAsync(userId, model.Title, model.Date))
+            if (!string.IsNullOrWhiteSpace(model.Title) && await _eventService.IsTitleDuplicateAsync(userId, model.Title, model.Date))
             {
                 ModelState.AddModelError(nameof(model.Title), "You already have an event with this exact title scheduled on the selected date.");
             }
@@ -116,7 +126,7 @@ namespace EventEase.Controllers
                 return RedirectToAction("Login", "Account");
             }
 
-            if (await _eventService.IsTitleDuplicateAsync(userId, model.Title, model.Date, model.Id))
+            if (!string.IsNullOrWhiteSpace(model.Title) && await _eventService.IsTitleDuplicateAsync(userId, model.Title, model.Date, model.Id))
             {
                 ModelState.AddModelError(nameof(model.Title), "Another event with this title on the selected date already exists.");
             }
@@ -192,12 +202,6 @@ namespace EventEase.Controllers
                 return RedirectToAction("Login", "Account");
             }
 
-            var details = await _eventService.GetEventDetailsAsync(id);
-            if (details == null)
-            {
-                return NotFound();
-            }
-
             // Security: Verify the requesting user owns this event before exporting PII
             var eventForOwnership = await _eventService.GetEventForEditAsync(id, userId);
             if (eventForOwnership == null)
@@ -206,33 +210,41 @@ namespace EventEase.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
+            var details = await _eventService.GetEventDetailsAsync(id);
+            if (details == null)
+            {
+                return NotFound();
+            }
+
             var builder = new StringBuilder();
             builder.Append("RSVP ID,Full Name,Email,Phone,RSVP Status,Waitlisted,Checked In,Check-In Time,Submitted Date");
-
             foreach (var cf in details.CustomFields)
             {
-                builder.Append($",\"{cf.Label.Replace("\"", "\"\"")}\"");
+                builder.Append(',').Append(CsvField(cf.Label));
             }
             builder.AppendLine();
 
             foreach (var att in details.Attendees)
             {
-                builder.Append($"{att.RsvpId},");
-                builder.Append($"\"{att.FullName.Replace("\"", "\"\"")}\",");
-                builder.Append($"\"{att.Email.Replace("\"", "\"\"")}\",");
-                builder.Append($"\"{(att.Phone ?? "").Replace("\"", "\"\"")}\",");
-                builder.Append($"\"{att.Status}\",");
-                builder.Append(att.IsWaitlisted ? "Yes," : "No,");
-                builder.Append(att.CheckedIn ? "Yes," : "No,");
-                builder.Append($"\"{att.FormattedCheckInTime}\",");
-                builder.Append($"\"{att.SubmittedAt:yyyy-MM-dd HH:mm}\"");
+                var row = new List<string>
+                {
+                    att.RsvpId.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                    CsvField(att.FullName),
+                    CsvField(att.Email),
+                    CsvField(att.Phone),
+                    CsvField(att.Status),
+                    CsvField(att.IsWaitlisted ? "Yes" : "No"),
+                    CsvField(att.CheckedIn ? "Yes" : "No"),
+                    CsvField(att.FormattedCheckInTime),
+                    CsvField(att.SubmittedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm"))
+                };
 
                 foreach (var cf in details.CustomFields)
                 {
                     var ans = att.CustomAnswers.ContainsKey(cf.Label) ? att.CustomAnswers[cf.Label] : "";
-                    builder.Append($",\"{ans.Replace("\"", "\"\"")}\"");
+                    row.Add(CsvField(ans));
                 }
-                builder.AppendLine();
+                builder.AppendLine(string.Join(",", row));
             }
 
             var preamble = Encoding.UTF8.GetPreamble();
@@ -243,6 +255,18 @@ namespace EventEase.Controllers
 
             var safeTitle = string.Join("_", details.Title.Split(Path.GetInvalidFileNameChars()));
             return File(bytes, "text/csv; charset=utf-8", $"{safeTitle}_Attendance_{DateTime.UtcNow:yyyyMMdd}.csv");
+        }
+
+        private static string CsvField(string? value)
+        {
+            value ??= string.Empty;
+            var firstVisible = value.TrimStart();
+            if (firstVisible.Length > 0 && "=+-@".Contains(firstVisible[0]))
+            {
+                value = "'" + value;
+            }
+
+            return $"\"{value.Replace("\"", "\"\"")}\"";
         }
     }
 }

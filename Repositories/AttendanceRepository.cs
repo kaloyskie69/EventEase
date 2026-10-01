@@ -14,6 +14,8 @@ namespace EventEase.Repositories
     /// </summary>
     public class AttendanceRepository : IAttendanceRepository
     {
+        private static readonly SemaphoreSlim[] CheckInLocks =
+            Enumerable.Range(0, 64).Select(_ => new SemaphoreSlim(1, 1)).ToArray();
         private readonly MongoDbContext _context;
 
         public AttendanceRepository(MongoDbContext context)
@@ -37,6 +39,20 @@ namespace EventEase.Repositories
         }
 
         public async Task<Attendance> CheckInAsync(int rsvpId)
+        {
+            var checkInLock = GetCheckInLock(rsvpId);
+            await checkInLock.WaitAsync();
+            try
+            {
+                return await CheckInCoreAsync(rsvpId);
+            }
+            finally
+            {
+                checkInLock.Release();
+            }
+        }
+
+        private async Task<Attendance> CheckInCoreAsync(int rsvpId)
         {
             // Optimistic concurrency: fetch, validate state, then atomic write
             var attendance = await _context.Attendances.FindOneAsync(a => a.RSVPId == rsvpId);
@@ -86,6 +102,20 @@ namespace EventEase.Repositories
 
         public async Task<Attendance> UndoCheckInAsync(int rsvpId)
         {
+            var checkInLock = GetCheckInLock(rsvpId);
+            await checkInLock.WaitAsync();
+            try
+            {
+                return await UndoCheckInCoreAsync(rsvpId);
+            }
+            finally
+            {
+                checkInLock.Release();
+            }
+        }
+
+        private async Task<Attendance> UndoCheckInCoreAsync(int rsvpId)
+        {
             var attendance = await _context.Attendances.FindOneAsync(a => a.RSVPId == rsvpId);
             var rsvp = await _context.RSVPs.FindOneAsync(r => r.Id == rsvpId);
             var eventId = rsvp?.EventId ?? 0;
@@ -117,6 +147,12 @@ namespace EventEase.Repositories
             }
 
             return attendance;
+        }
+
+        private static SemaphoreSlim GetCheckInLock(int rsvpId)
+        {
+            var stripe = (int)((uint)rsvpId % (uint)CheckInLocks.Length);
+            return CheckInLocks[stripe];
         }
 
         public async Task<int> GetCheckedInCountByEventIdAsync(int eventId)

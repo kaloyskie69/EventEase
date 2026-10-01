@@ -90,10 +90,10 @@
         <div class="col-lg-5">
             <div class="card card-modern p-4 mb-4">
                 <h4 class="fw-semibold mb-3">About this Event</h4>
-                <div class="text-muted small mb-4" style="line-height: 1.7;">
+                <div class="text-muted small mb-4" style="line-height: 1.7; white-space: pre-line;">
                     @if (!string.IsNullOrWhiteSpace(Model.Description))
                     {
-                        @Html.Raw(Model.Description.Replace("\n", "<br/>"))
+                        @Model.Description
                     }
                     else
                     {

@@ -9,6 +9,7 @@ namespace EventEase.Interfaces
         Task<IEnumerable<Event>> GetAllByOrganizerAsync(string organizerId);
         Task<Event?> GetByIdAsync(int id);
         Task<Event?> GetByIdWithDetailsAsync(int id);
+        Task<Event?> GetByIdWithOrganizerAsync(int id);
         Task<Event?> GetByIdWithCustomFieldsAsync(int id);
         Task<Event> AddAsync(Event ev);
         Task UpdateAsync(Event ev);

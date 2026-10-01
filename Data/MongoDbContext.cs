@@ -73,19 +73,38 @@ namespace EventEase.Data
                         var indexOptions = new CreateIndexOptions { Unique = true, Name = "IX_RSVP_EventId_Email" };
                         rsvpCollection.Indexes.CreateOne(new CreateIndexModel<RSVP>(indexKeys, indexOptions));
                     }
-                    catch
+                    catch (Exception ex)
                     {
-                        // Index already created or ignored
+                        logger.LogWarning(ex, "Could not create the unique RSVP event/email index. Check for duplicate RSVP data.");
                     }
 
-                    // Recommended additional indexes for production performance:
-                    // - Events: OrganizerId (for GetAllByOrganizerAsync)
-                    // - Events: Date (for sorting/filtering)
-                    // - Attendances: RSVPId (for GetByRsvpIdAsync)
-                    // - Attendances: EventId (for GetCheckedInCountByEventIdAsync)
-                    // - Users: NormalizedEmail (for FindByEmailAsync)
-                    // - Users: NormalizedUserName (for FindByNameAsync)
-                    // These are not auto-created to allow flexible deployment configurations.
+                    try
+                    {
+                        database.GetCollection<Event>("events").Indexes.CreateOne(
+                            new CreateIndexModel<Event>(
+                                Builders<Event>.IndexKeys.Ascending(e => e.OrganizerId).Ascending(e => e.Date),
+                                new CreateIndexOptions { Name = "IX_Event_Organizer_Date" }));
+
+                        var rsvps = database.GetCollection<RSVP>("rsvps");
+                        rsvps.Indexes.CreateOne(new CreateIndexModel<RSVP>(
+                            Builders<RSVP>.IndexKeys.Ascending(r => r.EventId).Ascending(r => r.Status).Ascending(r => r.IsWaitlisted),
+                            new CreateIndexOptions { Name = "IX_RSVP_Event_Status_Waitlist" }));
+                        rsvps.Indexes.CreateOne(new CreateIndexModel<RSVP>(
+                            Builders<RSVP>.IndexKeys.Ascending(r => r.EventId).Descending(r => r.SubmittedAt),
+                            new CreateIndexOptions { Name = "IX_RSVP_Event_SubmittedAt" }));
+
+                        var attendance = database.GetCollection<Attendance>("attendances");
+                        attendance.Indexes.CreateOne(new CreateIndexModel<Attendance>(
+                            Builders<Attendance>.IndexKeys.Ascending(a => a.RSVPId),
+                            new CreateIndexOptions { Name = "IX_Attendance_RSVPId" }));
+                        attendance.Indexes.CreateOne(new CreateIndexModel<Attendance>(
+                            Builders<Attendance>.IndexKeys.Ascending(a => a.EventId).Ascending(a => a.CheckedIn),
+                            new CreateIndexOptions { Name = "IX_Attendance_Event_CheckedIn" }));
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.LogWarning(ex, "Could not create one or more query performance indexes.");
+                    }
 
                     connected = true;
                     IsConnectedToLiveMongo = true;
