@@ -119,11 +119,13 @@ document.addEventListener('DOMContentLoaded', function () {
         btn.disabled = true;
         btn.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>`;
 
+        var token = document.querySelector('input[name="__RequestVerificationToken"]');
         fetch('/Attendance/ToggleCheckIn', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Accept': 'application/json'
+                'Accept': 'application/json',
+                'RequestVerificationToken': token ? token.value : ''
             },
             body: JSON.stringify({ rsvpId: rsvpId, undo: isUndo })
         })

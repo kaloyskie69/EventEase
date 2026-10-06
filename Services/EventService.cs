@@ -174,6 +174,7 @@ namespace EventEase.Services
             {
                 OrganizerId = organizerId,
                 Title = model.Title.Trim(),
+                NormalizedTitle = model.Title.Trim().ToLowerInvariant(),
                 Description = model.Description?.Trim(),
                 Venue = model.Venue.Trim(),
                 Date = model.Date.Date,
@@ -212,6 +213,7 @@ namespace EventEase.Services
             if (ev == null || ev.OrganizerId != organizerId) return false;
 
             ev.Title = model.Title.Trim();
+            ev.NormalizedTitle = model.Title.Trim().ToLowerInvariant();
             ev.Description = model.Description?.Trim();
             ev.Venue = model.Venue.Trim();
             ev.Date = model.Date.Date;

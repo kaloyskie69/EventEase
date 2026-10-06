@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using EventEase.Interfaces;
 using EventEase.Models;
 using EventEase.ViewModels.RSVP;
+using EventEase.Repositories;
 
 namespace EventEase.Services
 {
@@ -101,8 +102,15 @@ namespace EventEase.Services
                 }
             }
 
-            var createdRsvp = await _rsvpRepository.AddAsync(rsvp, responses);
-            return (true, null, createdRsvp.Id);
+            try
+            {
+                var createdRsvp = await _rsvpRepository.AddAsync(rsvp, responses);
+                return (true, null, createdRsvp.Id);
+            }
+            catch (DuplicateRsvpException)
+            {
+                return (false, $"An RSVP with email '{rsvp.Email}' has already been submitted for this event.", 0);
+            }
         }
 
         public async Task<RSVPConfirmationViewModel?> GetConfirmationAsync(int rsvpId)

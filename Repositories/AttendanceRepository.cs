@@ -121,14 +121,17 @@ namespace EventEase.Repositories
 
         public async Task<int> GetCheckedInCountByEventIdAsync(int eventId)
         {
-            var count = await _context.Attendances.CountDocumentsAsync(a => a.EventId == eventId && a.CheckedIn);
-            if (count == 0)
+            // First check if any attendance records exist at all for this event
+            var totalRecords = await _context.Attendances.CountDocumentsAsync(a => a.EventId == eventId);
+            if (totalRecords > 0)
             {
-                // Fallback check via RSVPs
-                var rsvps = await _context.RSVPs.FindAsync(r => r.EventId == eventId);
-                return rsvps.Count(r => r.Attendance != null && r.Attendance.CheckedIn);
+                // Attendance records exist - count only checked-in ones
+                return (int)await _context.Attendances.CountDocumentsAsync(a => a.EventId == eventId && a.CheckedIn);
             }
-            return (int)count;
+
+            // No attendance records exist - fallback to RSVP embedded data
+            var rsvps = await _context.RSVPs.FindAsync(r => r.EventId == eventId);
+            return rsvps.Count(r => r.Attendance != null && r.Attendance.CheckedIn);
         }
 
         public async Task<IEnumerable<Attendance>> GetAttendancesByEventIdAsync(int eventId)

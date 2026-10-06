@@ -64,30 +64,46 @@ namespace EventEase.Data
             // Mark that we have pending writes, then schedule/reschedule the actual write
             _pendingWrite = true;
 
-            // Dispose existing timer if any
-            _saveTimer?.Dispose();
-
-            // Schedule a debounced write to disk
-            _saveTimer = new System.Threading.Timer(
-                state =>
-                {
-                    try
-                    {
-                        if (_pendingWrite && !_disposed)
-                        {
-                            var json = JsonSerializer.Serialize(_data, JsonOptions);
-                            File.WriteAllText(_filePath, json);
-                            _pendingWrite = false;
-                        }
-                    }
-                    catch
-                    {
-                        // Ignore transient write issues
-                    }
-                },
+            // Reuse one timer; every mutation moves the write deadline forward.
+            _saveTimer ??= new System.Threading.Timer(
+                async state => await FlushPendingWriteAsync(),
                 null,
-                SaveDebounceMs,
-                Timeout.Infinite); // Execute once, then stop
+                Timeout.Infinite,
+                Timeout.Infinite);
+            _saveTimer.Change(SaveDebounceMs, Timeout.Infinite);
+        }
+
+        private async Task FlushPendingWriteAsync()
+        {
+            try
+            {
+                await _lock.WaitAsync();
+                try
+                {
+                    if (!_pendingWrite || _disposed) return;
+
+                    // Serialize and write while holding the collection lock so a timer
+                    // cannot enumerate the list while a request is mutating it.
+                    var json = JsonSerializer.Serialize(_data, JsonOptions);
+                    File.WriteAllText(_filePath, json);
+                    _pendingWrite = false;
+                }
+                finally
+                {
+                    _lock.Release();
+                }
+            }
+            catch
+            {
+                // Preserve the pending flag so disposal or a later write can retry.
+            }
+        }
+
+        private static Func<T, bool> GetCompiledFilter(Expression<Func<T, bool>> filter)
+        {
+            // Expressions may capture request-specific values. Caching by ToString()
+            // reuses a delegate bound to an earlier closure and can return wrong records.
+            return filter.Compile();
         }
 
         public async Task<List<T>> FindAllAsync()
@@ -108,7 +124,7 @@ namespace EventEase.Data
             await _lock.WaitAsync();
             try
             {
-                var compiled = filter.Compile();
+                var compiled = GetCompiledFilter(filter);
                 return _data.Where(compiled).ToList();
             }
             finally
@@ -122,7 +138,7 @@ namespace EventEase.Data
             await _lock.WaitAsync();
             try
             {
-                var compiled = filter.Compile();
+                var compiled = GetCompiledFilter(filter);
                 return _data.FirstOrDefault(compiled);
             }
             finally
@@ -181,7 +197,7 @@ namespace EventEase.Data
             await _lock.WaitAsync();
             try
             {
-                var compiled = filter.Compile();
+                var compiled = GetCompiledFilter(filter);
                 var index = _data.FindIndex(new Predicate<T>(compiled));
                 if (index >= 0)
                 {
@@ -204,7 +220,7 @@ namespace EventEase.Data
             await _lock.WaitAsync();
             try
             {
-                var compiled = filter.Compile();
+                var compiled = GetCompiledFilter(filter);
                 var index = _data.FindIndex(new Predicate<T>(compiled));
                 if (index >= 0)
                 {
@@ -223,7 +239,7 @@ namespace EventEase.Data
             await _lock.WaitAsync();
             try
             {
-                var compiled = filter.Compile();
+                var compiled = GetCompiledFilter(filter);
                 _data.RemoveAll(new Predicate<T>(compiled));
                 SaveToDisk();
             }
@@ -238,7 +254,7 @@ namespace EventEase.Data
             await _lock.WaitAsync();
             try
             {
-                var compiled = filter.Compile();
+                var compiled = GetCompiledFilter(filter);
                 return _data.Count(compiled);
             }
             finally
@@ -251,27 +267,29 @@ namespace EventEase.Data
         {
             if (_disposed) return;
 
-            // Cancel pending timer
             _saveTimer?.Dispose();
             _saveTimer = null;
 
-            // Flush any pending writes before disposal
-            if (_pendingWrite)
+            _lock.Wait();
+            try
             {
-                try
+                if (_pendingWrite)
                 {
                     var json = JsonSerializer.Serialize(_data, JsonOptions);
                     File.WriteAllText(_filePath, json);
                     _pendingWrite = false;
                 }
-                catch
-                {
-                    // Ignore transient write issues
-                }
+                _disposed = true;
             }
-
-            _lock?.Dispose();
-            _disposed = true;
+            catch
+            {
+                // Ignore transient write issues during shutdown.
+                _disposed = true;
+            }
+            finally
+            {
+                _lock.Release();
+            }
         }
     }
 }

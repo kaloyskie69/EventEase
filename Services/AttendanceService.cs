@@ -23,10 +23,10 @@ namespace EventEase.Services
             _attendanceRepository = attendanceRepository;
         }
 
-        public async Task<AttendanceCheckInViewModel?> GetCheckInRosterAsync(int eventId, string? searchQuery = null, string? statusFilter = null)
+        public async Task<AttendanceCheckInViewModel?> GetCheckInRosterAsync(int eventId, string organizerId, string? searchQuery = null, string? statusFilter = null)
         {
             var ev = await _eventRepository.GetByIdWithDetailsAsync(eventId);
-            if (ev == null) return null;
+            if (ev == null || ev.OrganizerId != organizerId) return null;
 
             var rsvps = ev.RSVPs.AsEnumerable();
 
@@ -103,16 +103,16 @@ namespace EventEase.Services
             };
         }
 
-        public async Task<CheckInResultViewModel> ToggleCheckInAsync(int rsvpId, bool undo = false)
+        public async Task<CheckInResultViewModel> ToggleCheckInAsync(int rsvpId, string organizerId, bool undo = false)
         {
             if (undo)
             {
-                return await UndoCheckInAttendeeAsync(rsvpId);
+                return await UndoCheckInAttendeeAsync(rsvpId, organizerId);
             }
-            return await CheckInAttendeeAsync(rsvpId);
+            return await CheckInAttendeeAsync(rsvpId, organizerId);
         }
 
-        public async Task<CheckInResultViewModel> CheckInAttendeeAsync(int rsvpId)
+        public async Task<CheckInResultViewModel> CheckInAttendeeAsync(int rsvpId, string organizerId)
         {
             var rsvp = await _rsvpRepository.GetByIdAsync(rsvpId);
             if (rsvp == null)
@@ -124,14 +124,20 @@ namespace EventEase.Services
                 };
             }
 
+            var ev = await _eventRepository.GetByIdAsync(rsvp.EventId);
+            if (ev == null || ev.OrganizerId != organizerId)
+                return new CheckInResultViewModel { Success = false, Message = "Attendee RSVP record not found." };
+
             var existingAttendance = await _attendanceRepository.GetByRsvpIdAsync(rsvpId);
             if (existingAttendance != null && existingAttendance.CheckedIn)
             {
-                // Prevent duplicate check in with fast lightweight counts
-                var dupTotal = await _rsvpRepository.GetCountByEventIdAsync(rsvp.EventId);
-                var dupGoing = await _rsvpRepository.GetCountByStatusAsync(rsvp.EventId, "Going");
-                var dupChecked = await _attendanceRepository.GetCheckedInCountByEventIdAsync(rsvp.EventId);
-                var dupRate = dupGoing > 0 ? Math.Round((double)dupChecked / dupGoing * 100, 1) : 0.0;
+                // Prevent duplicate check in - run count queries in parallel
+                var dupTotalTask = _rsvpRepository.GetCountByEventIdAsync(rsvp.EventId);
+                var dupGoingTask = _rsvpRepository.GetCountByStatusAsync(rsvp.EventId, "Going");
+                var dupCheckedTask = _attendanceRepository.GetCheckedInCountByEventIdAsync(rsvp.EventId);
+                await Task.WhenAll(dupTotalTask, dupGoingTask, dupCheckedTask);
+
+                var dupRate = dupGoingTask.Result > 0 ? Math.Round((double)dupCheckedTask.Result / dupGoingTask.Result * 100, 1) : 0.0;
 
                 return new CheckInResultViewModel
                 {
@@ -140,19 +146,22 @@ namespace EventEase.Services
                     RsvpId = rsvpId,
                     CheckedIn = true,
                     CheckedInTime = existingAttendance.CheckedInTime?.ToLocalTime().ToString("hh:mm tt"),
-                    TotalRSVPs = dupTotal,
-                    TotalGoing = dupGoing,
-                    TotalCheckedIn = dupChecked,
+                    TotalRSVPs = dupTotalTask.Result,
+                    TotalGoing = dupGoingTask.Result,
+                    TotalCheckedIn = dupCheckedTask.Result,
                     AttendancePercentage = dupRate
                 };
             }
 
             var updatedAttendance = await _attendanceRepository.CheckInAsync(rsvpId);
 
-            var totalRSVPs = await _rsvpRepository.GetCountByEventIdAsync(rsvp.EventId);
-            var going = await _rsvpRepository.GetCountByStatusAsync(rsvp.EventId, "Going");
-            var checkedIn = await _attendanceRepository.GetCheckedInCountByEventIdAsync(rsvp.EventId);
-            var rate = going > 0 ? Math.Round((double)checkedIn / going * 100, 1) : 0.0;
+            // Run count queries in parallel
+            var totalRSVPsTask = _rsvpRepository.GetCountByEventIdAsync(rsvp.EventId);
+            var goingTask = _rsvpRepository.GetCountByStatusAsync(rsvp.EventId, "Going");
+            var checkedInTask = _attendanceRepository.GetCheckedInCountByEventIdAsync(rsvp.EventId);
+            await Task.WhenAll(totalRSVPsTask, goingTask, checkedInTask);
+
+            var rate = goingTask.Result > 0 ? Math.Round((double)checkedInTask.Result / goingTask.Result * 100, 1) : 0.0;
 
             return new CheckInResultViewModel
             {
@@ -161,14 +170,14 @@ namespace EventEase.Services
                 RsvpId = rsvpId,
                 CheckedIn = true,
                 CheckedInTime = updatedAttendance.CheckedInTime?.ToLocalTime().ToString("hh:mm tt") ?? DateTime.Now.ToString("hh:mm tt"),
-                TotalRSVPs = totalRSVPs,
-                TotalGoing = going,
-                TotalCheckedIn = checkedIn,
+                TotalRSVPs = totalRSVPsTask.Result,
+                TotalGoing = goingTask.Result,
+                TotalCheckedIn = checkedInTask.Result,
                 AttendancePercentage = rate
             };
         }
 
-        public async Task<CheckInResultViewModel> UndoCheckInAttendeeAsync(int rsvpId)
+        public async Task<CheckInResultViewModel> UndoCheckInAttendeeAsync(int rsvpId, string organizerId)
         {
             var rsvp = await _rsvpRepository.GetByIdAsync(rsvpId);
             if (rsvp == null)
@@ -180,12 +189,19 @@ namespace EventEase.Services
                 };
             }
 
+            var ev = await _eventRepository.GetByIdAsync(rsvp.EventId);
+            if (ev == null || ev.OrganizerId != organizerId)
+                return new CheckInResultViewModel { Success = false, Message = "Attendee RSVP record not found." };
+
             await _attendanceRepository.UndoCheckInAsync(rsvpId);
 
-            var totalRSVPs = await _rsvpRepository.GetCountByEventIdAsync(rsvp.EventId);
-            var going = await _rsvpRepository.GetCountByStatusAsync(rsvp.EventId, "Going");
-            var checkedIn = await _attendanceRepository.GetCheckedInCountByEventIdAsync(rsvp.EventId);
-            var rate = going > 0 ? Math.Round((double)checkedIn / going * 100, 1) : 0.0;
+            // Run count queries in parallel
+            var totalRSVPsTask = _rsvpRepository.GetCountByEventIdAsync(rsvp.EventId);
+            var goingTask = _rsvpRepository.GetCountByStatusAsync(rsvp.EventId, "Going");
+            var checkedInTask = _attendanceRepository.GetCheckedInCountByEventIdAsync(rsvp.EventId);
+            await Task.WhenAll(totalRSVPsTask, goingTask, checkedInTask);
+
+            var rate = goingTask.Result > 0 ? Math.Round((double)checkedInTask.Result / goingTask.Result * 100, 1) : 0.0;
 
             return new CheckInResultViewModel
             {
@@ -194,9 +210,9 @@ namespace EventEase.Services
                 RsvpId = rsvpId,
                 CheckedIn = false,
                 CheckedInTime = null,
-                TotalRSVPs = totalRSVPs,
-                TotalGoing = going,
-                TotalCheckedIn = checkedIn,
+                TotalRSVPs = totalRSVPsTask.Result,
+                TotalGoing = goingTask.Result,
+                TotalCheckedIn = checkedInTask.Result,
                 AttendancePercentage = rate
             };
         }

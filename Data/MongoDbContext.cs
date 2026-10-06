@@ -1,6 +1,8 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using EventEase.Models;
 using Microsoft.Extensions.Configuration;
@@ -16,12 +18,17 @@ namespace EventEase.Data
     /// Connects to MongoDB when available or gracefully falls back to local NoSQL JSON document store
     /// if an external MongoDB daemon is not running on the host machine.
     /// </summary>
-    public class MongoDbContext
+    public class MongoDbContext : IDisposable
     {
         public INoSqlCollection<Event> Events { get; private set; } = null!;
         public INoSqlCollection<RSVP> RSVPs { get; private set; } = null!;
         public INoSqlCollection<Attendance> Attendances { get; private set; } = null!;
         public INoSqlCollection<ApplicationUser> Users { get; private set; } = null!;
+
+        private IMongoDatabase? _mongoDatabase;
+        private readonly bool _isMongoMode;
+        private readonly SemaphoreSlim _jsonCounterLock = new(1, 1);
+        private readonly Dictionary<string, int> _jsonCounters = new();
 
         public bool IsConnectedToLiveMongo { get; private set; }
         public string ConnectionInfo { get; private set; } = string.Empty;
@@ -50,6 +57,8 @@ namespace EventEase.Data
                 if (completedIndex >= 0 && !pingTask.IsFaulted && !pingTask.IsCanceled)
                 {
                     var database = client.GetDatabase(databaseName);
+                    _mongoDatabase = database;
+                    _isMongoMode = true;
                     Events = new MongoCollectionWrapper<Event>(database.GetCollection<Event>("events"));
                     RSVPs = new MongoCollectionWrapper<RSVP>(database.GetCollection<RSVP>("rsvps"));
                     Attendances = new MongoCollectionWrapper<Attendance>(database.GetCollection<Attendance>("attendances"));
@@ -104,23 +113,69 @@ namespace EventEase.Data
 
         public async Task<int> GetNextEventIdAsync()
         {
-            var maxId = await Events.GetMaxIdAsync(e => e.Id);
-            return maxId + 1;
+            return await GetNextIdAsync("EventId");
         }
 
         public async Task<int> GetNextRsvpIdAsync()
         {
-            var maxId = await RSVPs.GetMaxIdAsync(r => r.Id);
-            return maxId + 1;
+            return await GetNextIdAsync("RsvpId");
         }
 
         public async Task<int> GetNextAttendanceIdAsync()
         {
-            var maxId = await Attendances.GetMaxIdAsync(a => a.Id);
-            return maxId + 1;
+            return await GetNextIdAsync("AttendanceId");
         }
 
         public async Task<int> GetNextCustomFieldIdAsync()
+        {
+            return await GetNextIdAsync("CustomFieldId");
+        }
+
+        private async Task<int> GetNextIdAsync(string counterName)
+        {
+            if (_isMongoMode && _mongoDatabase != null)
+            {
+                // Atomic findAndModify with $inc guarantees unique IDs under concurrency
+                var counters = _mongoDatabase.GetCollection<Counter>("counters");
+                var filter = Builders<Counter>.Filter.Eq(c => c.Id, counterName);
+                var update = Builders<Counter>.Update.Inc(c => c.Value, 1);
+                var options = new FindOneAndUpdateOptions<Counter>
+                {
+                    IsUpsert = true,
+                    ReturnDocument = ReturnDocument.After
+                };
+                var result = await counters.FindOneAndUpdateAsync(filter, update, options);
+                return result.Value;
+            }
+
+            // Read each collection maximum once, then allocate IDs from memory. This
+            // avoids rescanning every stored document for each new event or RSVP.
+            await _jsonCounterLock.WaitAsync();
+            try
+            {
+                if (!_jsonCounters.TryGetValue(counterName, out var current))
+                {
+                    current = counterName switch
+                    {
+                        "EventId" => await Events.GetMaxIdAsync(e => e.Id),
+                        "RsvpId" => await RSVPs.GetMaxIdAsync(r => r.Id),
+                        "AttendanceId" => await Attendances.GetMaxIdAsync(a => a.Id),
+                        "CustomFieldId" => await GetMaxCustomFieldIdAsync(),
+                        _ => throw new ArgumentException($"Unknown counter: {counterName}")
+                    };
+                }
+
+                var next = checked(current + 1);
+                _jsonCounters[counterName] = next;
+                return next;
+            }
+            finally
+            {
+                _jsonCounterLock.Release();
+            }
+        }
+
+        private async Task<int> GetMaxCustomFieldIdAsync()
         {
             var allEvents = await Events.FindAllAsync();
             var maxId = 0;
@@ -132,7 +187,16 @@ namespace EventEase.Data
                     if (m > maxId) maxId = m;
                 }
             }
-            return maxId + 1;
+            return maxId;
+        }
+
+        public void Dispose()
+        {
+            // Dispose JSON document collections to flush pending writes
+            (Events as IDisposable)?.Dispose();
+            (RSVPs as IDisposable)?.Dispose();
+            (Attendances as IDisposable)?.Dispose();
+            (Users as IDisposable)?.Dispose();
         }
     }
 }

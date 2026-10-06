@@ -30,6 +30,15 @@ namespace EventEase.Repositories
 
             if (!sorted.Any()) return sorted;
 
+            // Auto-transition past events to Completed status
+            var today = DateTime.Today;
+            var eventsToUpdate = sorted.Where(e => e.Status == "Upcoming" && e.Date.Date < today).ToList();
+            foreach (var ev in eventsToUpdate)
+            {
+                ev.Status = "Completed";
+                await _context.Events.ReplaceOneAsync(e => e.Id == ev.Id, ev);
+            }
+
             var eventIds = sorted.Select(e => e.Id).ToHashSet();
             var allRsvps = await _context.RSVPs.FindAsync(r => eventIds.Contains(r.EventId));
             var allAttendances = await _context.Attendances.FindAsync(a => eventIds.Contains(a.EventId));
@@ -167,14 +176,13 @@ namespace EventEase.Repositories
 
         public async Task<bool> ExistsWithTitleAndDateAsync(string organizerId, string title, DateTime date, int? excludeId = null)
         {
-            var normalizedTitle = title.Trim().ToLower();
+            var normalizedTitle = title.Trim().ToLowerInvariant();
             var matches = await _context.Events.FindAsync(e => 
                 e.OrganizerId == organizerId && 
-                e.Date.Date == date.Date);
+                e.Date.Date == date.Date &&
+                e.NormalizedTitle == normalizedTitle);
 
-            return matches.Any(e => 
-                (!excludeId.HasValue || e.Id != excludeId.Value) &&
-                e.Title.Trim().Equals(normalizedTitle, StringComparison.OrdinalIgnoreCase));
+            return matches.Any(e => !excludeId.HasValue || e.Id != excludeId.Value);
         }
 
         public async Task AddCustomFieldsAsync(IEnumerable<CustomField> customFields)
