@@ -231,3 +231,301 @@
         padding: 0 16px;
     }
 }
+
+/* ==========================================================================
+   Print Stylesheet - Reports & Analytics Page (/Reports)
+   A4 landscape layout, dark text on white paper, fixed chart sizes,
+   page-break preservation, exact colors, and clean table headers.
+   ========================================================================== */
+
+.print-report-header {
+    display: none;
+}
+
+@page {
+    size: A4 landscape;
+    margin: 12mm;
+}
+
+@media print {
+    /* 1. Global Print Reset & Typography */
+    html, body {
+        background: #ffffff !important;
+        color: #111111 !important;
+        font-size: 12px !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+    }
+
+    * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    /* 2. Hide Screen-Only UI Elements */
+    .admin-sidebar,
+    .admin-header,
+    #sidebarToggleBtn,
+    .octo-search-container,
+    .no-print,
+    .btn-print-report,
+    .col-actions,
+    .toast-container,
+    .modal {
+        display: none !important;
+        visibility: hidden !important;
+    }
+
+    /* 3. Main Layout Resets */
+    .admin-wrapper {
+        display: block !important;
+        background: transparent !important;
+        min-height: auto !important;
+    }
+
+    .admin-main {
+        margin: 0 !important;
+        padding: 0 !important;
+        background: transparent !important;
+        overflow: visible !important;
+        width: 100% !important;
+    }
+
+    .admin-body {
+        padding: 0 !important;
+        margin: 0 !important;
+        background: transparent !important;
+        width: 100% !important;
+    }
+
+    /* 4. Print-Only Report Header */
+    .print-report-header {
+        display: block !important;
+        margin-bottom: 14px !important;
+    }
+
+    .print-report-header h2 {
+        color: #111111 !important;
+        font-size: 20px !important;
+        font-weight: 700 !important;
+    }
+
+    /* 5. Page 1: Stat Cards in Single Row */
+    .stat-cards-row {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        gap: 12px !important;
+        margin-bottom: 14px !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+
+    .stat-cards-row > div {
+        flex: 1 1 0 !important;
+        width: 25% !important;
+        max-width: 25% !important;
+    }
+
+    .stat-card {
+        background: #ffffff !important;
+        border: 1px solid #d0d7de !important;
+        box-shadow: none !important;
+        padding: 8px 12px !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+
+    .stat-card .stat-value {
+        color: #111111 !important;
+        font-size: 18px !important;
+    }
+
+    .stat-card .stat-label {
+        color: #57606a !important;
+        font-size: 10px !important;
+    }
+
+    .stat-card .stat-icon {
+        border-color: #d0d7de !important;
+        background: #f6f8fa !important;
+    }
+
+    /* 6. Page 1: Charts Row Side by Side */
+    .charts-print-row {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        gap: 16px !important;
+        margin-bottom: 14px !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+
+    .chart-card-col-trend {
+        flex: 0 0 62% !important;
+        width: 62% !important;
+        max-width: 62% !important;
+    }
+
+    .chart-card-col-rsvp {
+        flex: 0 0 38% !important;
+        width: 38% !important;
+        max-width: 38% !important;
+    }
+
+    .card-modern {
+        background: #ffffff !important;
+        border: 1px solid #d0d7de !important;
+        color: #111111 !important;
+        box-shadow: none !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+
+    .card-modern h5 {
+        color: #111111 !important;
+        font-size: 14px !important;
+    }
+
+    .card-modern small,
+    .card-modern .text-muted {
+        color: #57606a !important;
+    }
+
+    .chart-trend-container {
+        position: relative !important;
+        height: 200px !important;
+        width: 100% !important;
+    }
+
+    .chart-donut-container {
+        position: relative !important;
+        height: 160px !important;
+        width: 100% !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+
+    .chart-donut-container canvas {
+        margin: 0 auto !important;
+        max-height: 160px !important;
+    }
+
+    .rsvp-breakdown-print {
+        border-top: 1px solid #d0d7de !important;
+        padding-top: 6px !important;
+        margin-top: 6px !important;
+    }
+
+    .rsvp-breakdown-print strong {
+        font-size: 13px !important;
+    }
+
+    /* 7. Page 2: Table Section */
+    .table-print-card {
+        page-break-before: always !important;
+        break-before: page !important;
+        margin-top: 0 !important;
+        border: 1px solid #d0d7de !important;
+        background: #ffffff !important;
+        padding: 16px !important;
+    }
+
+    .report-table {
+        font-size: 11px !important;
+        width: 100% !important;
+        color: #111111 !important;
+        border-collapse: collapse !important;
+    }
+
+    .report-table thead {
+        display: table-header-group !important;
+    }
+
+    .report-table thead th {
+        background-color: #f6f8fa !important;
+        color: #24292f !important;
+        border-bottom: 2px solid #d0d7de !important;
+        padding: 6px 8px !important;
+        font-size: 11px !important;
+        font-weight: 600 !important;
+    }
+
+    .report-table tbody tr,
+    .report-table tfoot tr {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+
+    .report-table td {
+        padding: 6px 8px !important;
+        border-bottom: 1px solid #d0d7de !important;
+        vertical-align: middle !important;
+        color: #24292f !important;
+    }
+
+    .report-table td a {
+        color: #0969da !important;
+        text-decoration: none !important;
+    }
+
+    /* Table Column Sizing and Wrapping */
+    .col-date,
+    .col-rsvps,
+    .col-going,
+    .col-checkedin,
+    .col-turnout {
+        white-space: nowrap !important;
+    }
+
+    .col-venue {
+        white-space: normal !important;
+        word-break: normal !important;
+        max-width: 220px !important;
+    }
+
+    /* Status Badges & Progress Bars Exact Color Printing */
+    .badge-going {
+        background-color: rgba(63, 185, 80, 0.2) !important;
+        color: #1a7f37 !important;
+        border: 1px solid #2da44e !important;
+    }
+
+    .badge-maybe {
+        background-color: rgba(210, 153, 34, 0.2) !important;
+        color: #9a6700 !important;
+        border: 1px solid #bf8700 !important;
+    }
+
+    .badge-notgoing {
+        background-color: rgba(248, 81, 73, 0.2) !important;
+        color: #cf222e !important;
+        border: 1px solid #cf222e !important;
+    }
+
+    .badge-neutral {
+        background-color: #f6f8fa !important;
+        color: #57606a !important;
+        border: 1px solid #d0d7de !important;
+    }
+
+    .progress {
+        background-color: #eaeef2 !important;
+        border: 1px solid #d0d7de !important;
+    }
+
+    .progress-bar {
+        background-color: #2da44e !important;
+    }
+
+    /* Table Totals Row */
+    .table-totals-row td {
+        background-color: #f6f8fa !important;
+        border-top: 2px solid #d0d7de !important;
+        border-bottom: 2px solid #d0d7de !important;
+        font-weight: 700 !important;
+    }
+}

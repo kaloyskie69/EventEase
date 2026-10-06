@@ -84,7 +84,7 @@ function initDashboardCharts(monthlyData, rsvpData, eventAttendanceData) {
                     y1: {
                         beginAtZero: true,
                         position: 'right',
-                        title: { display: true, text: 'Attendees', color: '#8B949E', font: { size: 11, weight: 600 } },
+                        title: { display: true, text: 'Guests checked in', color: '#8B949E', font: { size: 11, weight: 600 } },
                         grid: { drawOnChartArea: false },
                         ticks: { stepSize: 1, precision: 0, color: '#8B949E', font: { family: "'Inter', sans-serif", size: 11 } }
                     },
@@ -177,8 +177,8 @@ function initDashboardCharts(monthlyData, rsvpData, eventAttendanceData) {
                         titleColor: '#E6EDF3',
                         bodyColor: '#8B949E',
                         cornerRadius: 6,
-                        titleFont: { family: "'JetBrains Mono', monospace", size: 12 },
-                        bodyFont: { family: "'JetBrains Mono', monospace", size: 12 },
+                        titleFont: { family: "'Inter', sans-serif", size: 12 },
+                        bodyFont: { family: "'Inter', sans-serif", size: 12 },
                         callbacks: {
                             label: function (ctx) {
                                 return ctx.raw + '% Attendance Rate';
@@ -193,7 +193,7 @@ function initDashboardCharts(monthlyData, rsvpData, eventAttendanceData) {
                         ticks: {
                             callback: function (val) { return val + '%'; },
                             color: '#8B949E',
-                            font: { family: "'JetBrains Mono', monospace", size: 11 }
+                            font: { family: "'Inter', sans-serif", size: 11 }
                         },
                         grid: { color: '#30363D' }
                     },
@@ -205,4 +205,128 @@ function initDashboardCharts(monthlyData, rsvpData, eventAttendanceData) {
             }
         });
     }
+}
+
+// ==========================================================================
+// Print Lifecycle Management for Charts
+// Synchronously updates Chart.js instances to print palette (#111 text, #ddd grid)
+// and disables animation so the canvas prints fully rendered.
+// ==========================================================================
+
+function prepareChartsForPrint() {
+    if (typeof Chart === 'undefined') return;
+
+    var monthlyCanvas = document.getElementById('monthlyEventsChart');
+    var rsvpCanvas = document.getElementById('rsvpDistributionChart');
+
+    var monthlyChart = monthlyCanvas ? Chart.getChart(monthlyCanvas) : null;
+    var rsvpChart = rsvpCanvas ? Chart.getChart(rsvpCanvas) : null;
+
+    if (monthlyChart) {
+        monthlyChart._origAnimation = monthlyChart.options.animation;
+        monthlyChart.options.animation = false;
+
+        if (monthlyChart.options.plugins && monthlyChart.options.plugins.legend && monthlyChart.options.plugins.legend.labels) {
+            monthlyChart.options.plugins.legend.labels.color = '#111111';
+        }
+        if (monthlyChart.options.scales && monthlyChart.options.scales.x) {
+            if (monthlyChart.options.scales.x.ticks) monthlyChart.options.scales.x.ticks.color = '#111111';
+            if (monthlyChart.options.scales.x.grid) monthlyChart.options.scales.x.grid.color = '#dddddd';
+        }
+        if (monthlyChart.options.scales && monthlyChart.options.scales.y) {
+            if (monthlyChart.options.scales.y.title) {
+                monthlyChart.options.scales.y.title.color = '#111111';
+                monthlyChart.options.scales.y.title.text = 'Events';
+            }
+            if (monthlyChart.options.scales.y.ticks) {
+                monthlyChart.options.scales.y.ticks.color = '#111111';
+                monthlyChart.options.scales.y.ticks.precision = 0;
+                monthlyChart.options.scales.y.ticks.stepSize = 1;
+            }
+            if (monthlyChart.options.scales.y.grid) monthlyChart.options.scales.y.grid.color = '#dddddd';
+        }
+        if (monthlyChart.options.scales && monthlyChart.options.scales.y1) {
+            if (monthlyChart.options.scales.y1.title) {
+                monthlyChart.options.scales.y1.title.color = '#111111';
+                monthlyChart.options.scales.y1.title.text = 'Guests checked in';
+            }
+            if (monthlyChart.options.scales.y1.ticks) {
+                monthlyChart.options.scales.y1.ticks.color = '#111111';
+                monthlyChart.options.scales.y1.ticks.precision = 0;
+                monthlyChart.options.scales.y1.ticks.stepSize = 1;
+            }
+        }
+
+        monthlyChart.resize();
+        monthlyChart.update('none');
+    }
+
+    if (rsvpChart) {
+        rsvpChart._origAnimation = rsvpChart.options.animation;
+        rsvpChart.options.animation = false;
+
+        if (rsvpChart.options.plugins && rsvpChart.options.plugins.legend && rsvpChart.options.plugins.legend.labels) {
+            rsvpChart.options.plugins.legend.labels.color = '#111111';
+        }
+
+        rsvpChart.resize();
+        rsvpChart.update('none');
+    }
+}
+
+function restoreChartsAfterPrint() {
+    if (typeof Chart === 'undefined') return;
+
+    var monthlyCanvas = document.getElementById('monthlyEventsChart');
+    var rsvpCanvas = document.getElementById('rsvpDistributionChart');
+
+    var monthlyChart = monthlyCanvas ? Chart.getChart(monthlyCanvas) : null;
+    var rsvpChart = rsvpCanvas ? Chart.getChart(rsvpCanvas) : null;
+
+    if (monthlyChart) {
+        monthlyChart.options.animation = monthlyChart._origAnimation !== undefined ? monthlyChart._origAnimation : true;
+
+        if (monthlyChart.options.plugins && monthlyChart.options.plugins.legend && monthlyChart.options.plugins.legend.labels) {
+            monthlyChart.options.plugins.legend.labels.color = '#8B949E';
+        }
+        if (monthlyChart.options.scales && monthlyChart.options.scales.x) {
+            if (monthlyChart.options.scales.x.ticks) monthlyChart.options.scales.x.ticks.color = '#8B949E';
+            if (monthlyChart.options.scales.x.grid) monthlyChart.options.scales.x.grid.color = '#30363D';
+        }
+        if (monthlyChart.options.scales && monthlyChart.options.scales.y) {
+            if (monthlyChart.options.scales.y.title) {
+                monthlyChart.options.scales.y.title.color = '#8B949E';
+                monthlyChart.options.scales.y.title.text = 'Events';
+            }
+            if (monthlyChart.options.scales.y.ticks) monthlyChart.options.scales.y.ticks.color = '#8B949E';
+            if (monthlyChart.options.scales.y.grid) monthlyChart.options.scales.y.grid.color = '#30363D';
+        }
+        if (monthlyChart.options.scales && monthlyChart.options.scales.y1) {
+            if (monthlyChart.options.scales.y1.title) {
+                monthlyChart.options.scales.y1.title.color = '#8B949E';
+                monthlyChart.options.scales.y1.title.text = 'Guests checked in';
+            }
+            if (monthlyChart.options.scales.y1.ticks) monthlyChart.options.scales.y1.ticks.color = '#8B949E';
+        }
+
+        monthlyChart.resize();
+        monthlyChart.update();
+    }
+
+    if (rsvpChart) {
+        rsvpChart.options.animation = rsvpChart._origAnimation !== undefined ? rsvpChart._origAnimation : true;
+
+        if (rsvpChart.options.plugins && rsvpChart.options.plugins.legend && rsvpChart.options.plugins.legend.labels) {
+            rsvpChart.options.plugins.legend.labels.color = '#8B949E';
+        }
+
+        rsvpChart.resize();
+        rsvpChart.update();
+    }
+}
+
+if (!window._dashboardChartsPrintBound) {
+    window._dashboardChartsPrintBound = true;
+    window.addEventListener('beforeprint', prepareChartsForPrint);
+    window.addEventListener('afterprint', restoreChartsAfterPrint);
 }

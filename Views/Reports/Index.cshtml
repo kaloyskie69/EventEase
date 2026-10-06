@@ -4,20 +4,33 @@
     Layout = "_AdminLayout";
 }
 
-<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+<!-- Print-Only Header -->
+<div class="print-report-header">
+    <div class="d-flex justify-content-between align-items-end border-bottom pb-2 mb-3">
+        <div>
+            <h2 class="h4 fw-bold mb-0 text-dark">EventEase Event Report</h2>
+            <div class="small text-muted">Organizer: @User.Identity?.Name</div>
+        </div>
+        <div class="text-end small text-muted">
+            Generated: @DateTime.Now.ToString("MMM d, yyyy h:mm tt", System.Globalization.CultureInfo.InvariantCulture)
+        </div>
+    </div>
+</div>
+
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3 no-print">
     <div>
         <h3 class="fw-semibold mb-1">Reports &amp; Analytics</h3>
         <p class="text-muted mb-0 small">See how your events are performing, track attendance, and understand guest turnout.</p>
     </div>
     <div>
-        <button type="button" class="btn btn-outline-custom" onclick="window.print()">
+        <button type="button" class="btn btn-outline-custom btn-print-report" onclick="if (typeof prepareChartsForPrint === 'function') prepareChartsForPrint(); window.print();">
             <i class="bi bi-printer me-1"></i> Print report
         </button>
     </div>
 </div>
 
 <!-- 4 Key Reporting Cards -->
-<div class="row g-2 mb-4">
+<div class="row g-2 mb-4 stat-cards-row">
     <div class="col-6 col-xl-3">
         <div class="stat-card">
             <div class="stat-icon primary">
@@ -68,25 +81,25 @@
 </div>
 
 <!-- Visual Charts Section -->
-<div class="row g-3 mb-4">
-    <div class="col-lg-8">
+<div class="row g-3 mb-4 charts-print-row">
+    <div class="col-lg-8 chart-card-col-trend">
         <div class="card card-modern h-100">
             <h5 class="fw-semibold mb-1">Events and attendance by month</h5>
             <small class="text-muted mb-3 d-block">Events you hosted vs. guests who showed up</small>
-            <div style="position: relative; height: 280px;">
+            <div class="chart-trend-container" style="position: relative; height: 280px;">
                 <canvas id="monthlyEventsChart"></canvas>
             </div>
         </div>
     </div>
 
-    <div class="col-lg-4">
+    <div class="col-lg-4 chart-card-col-rsvp">
         <div class="card card-modern h-100">
             <h5 class="fw-semibold mb-1">RSVP responses</h5>
             <small class="text-muted mb-3 d-block">How guests responded across all events</small>
-            <div style="position: relative; height: 220px;">
+            <div class="chart-donut-container" style="position: relative; height: 220px;">
                 <canvas id="rsvpDistributionChart"></canvas>
             </div>
-            <div class="d-flex justify-content-around text-center pt-3 border-top mt-2" style="border-color: var(--octo-border) !important;">
+            <div class="d-flex justify-content-around text-center pt-3 border-top mt-2 rsvp-breakdown-print" style="border-color: var(--octo-border) !important;">
                 <div>
                     <span class="badge badge-going d-block mb-1">Going</span>
                     <strong class="fs-6" style="color: var(--octo-success);">@Model.RsvpDistribution.GoingCount</strong>
@@ -105,35 +118,35 @@
 </div>
 
 <!-- Performance Summary Table of All Events -->
-<div class="card card-modern p-4 mb-5">
+<div class="card card-modern p-4 mb-5 table-print-card">
     <h5 class="fw-semibold mb-3">Event summary</h5>
     @if (Model.EventSummaries.Any())
     {
         <div class="table-responsive">
-            <table class="table table-custom mb-0">
+            <table class="table table-custom mb-0 report-table">
                 <thead>
                     <tr>
-                        <th>Event</th>
-                        <th>Date</th>
-                        <th>Venue</th>
-                        <th>Status</th>
-                        <th>RSVPs</th>
-                        <th>Going</th>
-                        <th>Checked in</th>
-                        <th>Turnout</th>
-                        <th>Actions</th>
+                        <th class="col-event">Event</th>
+                        <th class="col-date">Date</th>
+                        <th class="col-venue">Venue</th>
+                        <th class="col-status">Status</th>
+                        <th class="col-rsvps">RSVPs</th>
+                        <th class="col-going">Going</th>
+                        <th class="col-checkedin">Checked in</th>
+                        <th class="col-turnout">Turnout</th>
+                        <th class="col-actions">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach (var ev in Model.EventSummaries)
                     {
                         <tr>
-                            <td>
+                            <td class="col-event">
                                 <a asp-controller="Events" asp-action="Details" asp-route-id="@ev.Id" class="fw-semibold" style="color: var(--octo-link);">@ev.Title</a>
                             </td>
-                            <td class="small">@ev.Date.ToString("MMM d, yyyy")</td>
-                            <td class="text-muted small">@ev.Venue</td>
-                            <td>
+                            <td class="col-date text-nowrap small">@ev.Date.ToString("MMM d, yyyy", System.Globalization.CultureInfo.InvariantCulture)</td>
+                            <td class="col-venue text-muted small">@ev.Venue</td>
+                            <td class="col-status">
                                 @if (ev.Status == "Upcoming")
                                 {
                                     <span class="badge badge-going">Upcoming</span>
@@ -147,18 +160,25 @@
                                     <span class="badge badge-notgoing">Cancelled</span>
                                 }
                             </td>
-                            <td>@ev.TotalRSVPs</td>
-                            <td style="color: var(--octo-success);">@ev.GoingCount</td>
-                            <td style="color: var(--octo-link);">@ev.CheckedInCount</td>
-                            <td>
-                                <div class="d-flex align-items-center gap-2">
-                                    <div class="progress flex-grow-1" style="height: 4px; width: 60px;">
-                                        <div class="progress-bar" role="progressbar" style="width: @ev.AttendancePercentage%" aria-valuenow="@ev.AttendancePercentage" aria-valuemin="0" aria-valuemax="100"></div>
+                            <td class="col-rsvps text-nowrap">@ev.TotalRSVPs</td>
+                            <td class="col-going text-nowrap" style="color: var(--octo-success);">@ev.GoingCount</td>
+                            <td class="col-checkedin text-nowrap" style="color: var(--octo-link);">@ev.CheckedInCount</td>
+                            <td class="col-turnout text-nowrap">
+                                @if (ev.GoingCount == 0)
+                                {
+                                    <span class="text-muted">—</span>
+                                }
+                                else
+                                {
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="progress flex-grow-1" style="height: 4px; width: 60px;">
+                                            <div class="progress-bar" role="progressbar" style="width: @ev.AttendancePercentage%" aria-valuenow="@ev.AttendancePercentage" aria-valuemin="0" aria-valuemax="100"></div>
+                                        </div>
+                                        <span class="small fw-semibold">@ev.AttendancePercentage%</span>
                                     </div>
-                                    <span class="small fw-semibold">@ev.AttendancePercentage%</span>
-                                </div>
+                                }
                             </td>
-                            <td>
+                            <td class="col-actions">
                                 <div class="d-flex gap-1">
                                     <a asp-controller="Attendance" asp-action="CheckIn" asp-route-eventId="@ev.Id" class="btn btn-sm btn-outline-custom" title="Check in">
                                         <i class="bi bi-qr-code-scan"></i>
@@ -171,6 +191,33 @@
                         </tr>
                     }
                 </tbody>
+                <tfoot>
+                    <tr class="table-totals-row fw-bold">
+                        <td class="col-event">Total (@Model.TotalEvents events)</td>
+                        <td class="col-date text-nowrap">—</td>
+                        <td class="col-venue">—</td>
+                        <td class="col-status">—</td>
+                        <td class="col-rsvps text-nowrap">@Model.TotalRSVPs</td>
+                        <td class="col-going text-nowrap" style="color: var(--octo-success);">@Model.RsvpDistribution.GoingCount</td>
+                        <td class="col-checkedin text-nowrap" style="color: var(--octo-link);">@Model.TotalCheckedIn</td>
+                        <td class="col-turnout text-nowrap">
+                            @if (Model.RsvpDistribution.GoingCount == 0)
+                            {
+                                <span class="text-muted">—</span>
+                            }
+                            else
+                            {
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="progress flex-grow-1" style="height: 4px; width: 60px;">
+                                        <div class="progress-bar" role="progressbar" style="width: @Model.OverallAttendanceRate%" aria-valuenow="@Model.OverallAttendanceRate" aria-valuemin="0" aria-valuemax="100"></div>
+                                    </div>
+                                    <span class="small fw-semibold">@Model.OverallAttendanceRate%</span>
+                                </div>
+                            }
+                        </td>
+                        <td class="col-actions">—</td>
+                    </tr>
+                </tfoot>
             </table>
         </div>
     }
