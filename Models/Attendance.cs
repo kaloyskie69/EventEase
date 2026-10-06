@@ -8,6 +8,7 @@ namespace EventEase.Models
     /// Represents the on-site event-day attendance verification record.
     /// Stored both as a document in the NoSQL "attendances" collection and embedded inside RSVP.
     /// </summary>
+    [BsonIgnoreExtraElements]
     public class Attendance
     {
         [BsonId]

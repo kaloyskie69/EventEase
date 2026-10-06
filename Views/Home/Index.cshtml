@@ -1,6 +1,6 @@
 @model IEnumerable<EventEase.Models.Event>
 @{
-    ViewData["Title"] = "Developer-Centric Event RSVP & Attendance";
+    ViewData["Title"] = "Event RSVP & Check-In";
 }
 
 <!-- Hero Section -->
@@ -8,35 +8,26 @@
     <div class="container-fluid px-lg-5 py-4">
         <div class="row align-items-center gy-5">
             <div class="col-lg-7">
-                <div class="d-inline-flex align-items-center gap-2 mb-3">
-                    <span class="badge badge-primary">
-                        <i class="bi bi-terminal me-1"></i> Octo Code Design System
-                    </span>
-                    <span class="badge badge-going">
-                        <i class="bi bi-check-circle me-1"></i> NoSQL Engine
-                    </span>
-                </div>
                 <h1 class="display-4 fw-bold text-white mb-3">
                     Streamlined Event RSVPs. <br/>
                     <span style="color: var(--octo-link);">Live Check-In</span> Roster.
                 </h1>
                 <p class="lead text-muted mb-4" style="max-width: 640px; font-size: 16px;">
-                    Account-free public RSVPs and real-time event-day attendee tracking.
-                    Share a public link with zero signup required, record custom questions, and check in guests instantly.
+                    Share one link and let guests RSVP in seconds, no signup needed. Ask your own questions and check people in on the day.
                 </p>
                 <div class="d-flex flex-wrap gap-2 mb-4">
                     <a asp-controller="Account" asp-action="Register" class="btn btn-primary">
                         <i class="bi bi-plus-lg"></i> Create Event
                     </a>
                     <a asp-controller="Account" asp-action="Login" class="btn btn-outline-custom">
-                        <i class="bi bi-terminal"></i> Organizer Portal
+                        <i class="bi bi-box-arrow-in-right"></i> Organizer Portal
                     </a>
                 </div>
 
-                <div class="pt-3 border-top d-flex flex-wrap gap-4 text-muted small font-mono" style="border-color: var(--octo-border) !important;">
-                    <div><i class="bi bi-check2 text-success me-1"></i> No Attendee Registration</div>
-                    <div><i class="bi bi-check2 text-success me-1"></i> Dynamic Form Questions</div>
-                    <div><i class="bi bi-check2 text-success me-1"></i> 1-Click Check-In</div>
+                <div class="pt-3 border-top d-flex flex-wrap gap-4 text-muted small" style="border-color: var(--octo-border) !important;">
+                    <div><i class="bi bi-check2 text-success me-1"></i> No account needed to RSVP</div>
+                    <div><i class="bi bi-check2 text-success me-1"></i> Custom questions</div>
+                    <div><i class="bi bi-check2 text-success me-1"></i> One-tap check-in</div>
                 </div>
             </div>
 
@@ -45,39 +36,38 @@
                     <div class="d-flex align-items-center justify-content-between pb-3 mb-2 border-bottom" style="border-color: var(--octo-border) !important;">
                         <div class="d-flex align-items-center gap-2">
                             <span class="badge badge-going"><i class="bi bi-broadcast"></i></span>
-                            <span class="fw-semibold">live_attendance_stream.log</span>
+                            <span class="fw-semibold">Today's guest list</span>
                         </div>
-                        <span class="badge badge-going">Active</span>
+                        <span class="badge badge-going">Live</span>
                     </div>
 
-                    <!-- Mini sample table styled in Octo Code -->
+                    <!-- Mini sample table -->
                     <div class="list-group list-group-flush mb-3">
                         <div class="list-group-item d-flex align-items-center justify-content-between px-2 py-2">
                             <div>
-                                <div class="fw-semibold" style="color: var(--octo-link);">elena_rostova</div>
-                                <div class="text-muted small font-mono">rsvp: going • dietary: salmon</div>
+                                <div class="fw-semibold" style="color: var(--octo-link);">Elena Rostova</div>
+                                <div class="text-muted small">Dietary: Salmon</div>
                             </div>
-                            <span class="badge badge-checkedin font-mono">checked_in</span>
+                            <span class="badge badge-checkedin">Checked in</span>
                         </div>
                         <div class="list-group-item d-flex align-items-center justify-content-between px-2 py-2">
                             <div>
-                                <div class="fw-semibold" style="color: var(--octo-link);">marcus_chen</div>
-                                <div class="text-muted small font-mono">rsvp: going • guest: 2</div>
+                                <div class="fw-semibold" style="color: var(--octo-link);">Marcus Chen</div>
+                                <div class="text-muted small">+1 guest</div>
                             </div>
-                            <span class="badge badge-checkedin font-mono">checked_in</span>
+                            <span class="badge badge-checkedin">Checked in</span>
                         </div>
                         <div class="list-group-item d-flex align-items-center justify-content-between px-2 py-2">
                             <div>
-                                <div class="fw-semibold" style="color: var(--octo-link);">chloe_bennett</div>
-                                <div class="text-muted small font-mono">rsvp: going • pending</div>
+                                <div class="fw-semibold" style="color: var(--octo-link);">Chloe Bennett</div>
+                                <div class="text-muted small">RSVP'd</div>
                             </div>
-                            <span class="badge badge-maybe font-mono">pending</span>
+                            <span class="badge badge-maybe">Waiting</span>
                         </div>
                     </div>
 
-                    <div class="p-2 rounded d-flex justify-content-between align-items-center" style="background-color: var(--octo-bg); border: 1px solid var(--octo-border);">
-                        <span class="small font-mono text-muted">turnout_rate</span>
-                        <span class="font-mono fw-semibold" style="color: var(--octo-success);">66.7% [2/3]</span>
+                    <div class="p-2 rounded d-flex justify-content-center align-items-center" style="background-color: var(--octo-bg); border: 1px solid var(--octo-border);">
+                        <span class="fw-semibold" style="color: var(--octo-success);">2 of 3 guests arrived</span>
                     </div>
                 </div>
             </div>
@@ -102,74 +92,13 @@
     </div>
 </section>
 
-<!-- Features Grid -->
+<!-- Upcoming Public Events Showcase -->
 <section class="container-fluid px-lg-5 py-4">
-    <div class="mb-4">
-        <h2 class="h3 fw-semibold mb-1">Architecture & Core Capabilities</h2>
-        <p class="text-muted mb-0">High-density event operations from distribution to live check-in.</p>
-    </div>
-
-    <div class="row g-3">
-        <div class="col-md-4">
-            <div class="card card-modern h-100 d-flex flex-column">
-                <div class="d-flex align-items-center gap-2 mb-2">
-                    <span class="badge badge-primary"><i class="bi bi-link-45deg"></i></span>
-                    <h5 class="mb-0 fw-semibold">Zero-Friction Public Link</h5>
-                </div>
-                <p class="text-muted small mb-3 flex-grow-1">
-                    Attendees access event pages without mandatory authentication. Submissions validate duplicate emails and lock spots immediately.
-                </p>
-                <div class="font-mono text-meta" style="color: var(--octo-link);">
-                    GET /rsvp/event/{id}
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-4">
-            <div class="card card-modern h-100 d-flex flex-column">
-                <div class="d-flex align-items-center gap-2 mb-2">
-                    <span class="badge badge-warning"><i class="bi bi-sliders"></i></span>
-                    <h5 class="mb-0 fw-semibold">Dynamic Custom Fields</h5>
-                </div>
-                <p class="text-muted small mb-3 flex-grow-1">
-                    Store structured custom questions (text, number, single select dropdown, checkbox) directly inside embedded NoSQL BSON documents.
-                </p>
-                <div class="font-mono text-meta" style="color: var(--octo-warning);">
-                    schema: embedded_documents[]
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-4">
-            <div class="card card-modern h-100 d-flex flex-column">
-                <div class="d-flex align-items-center gap-2 mb-2">
-                    <span class="badge badge-going"><i class="bi bi-qr-code-scan"></i></span>
-                    <h5 class="mb-0 fw-semibold">Live Event Check-In</h5>
-                </div>
-                <p class="text-muted small mb-3 flex-grow-1">
-                    Organizers check in guests with instant AJAX calls, real-time search filtering, and live turnout metrics without full page reloads.
-                </p>
-                <div class="font-mono text-meta" style="color: var(--octo-success);">
-                    POST /attendance/togglecheckin
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- Upcoming Public Events Showcase (Repository Card Style) -->
-<section class="container-fluid px-lg-5 py-4 border-top" style="border-color: var(--octo-border) !important;">
     <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-2">
         <div>
             <h2 class="h3 fw-semibold mb-1">Public Events Directory</h2>
-            <p class="text-muted mb-0">Active event repositories accepting RSVPs</p>
+            <p class="text-muted mb-0">Upcoming events you can RSVP to</p>
         </div>
-        @if (User.Identity != null && User.Identity.IsAuthenticated)
-        {
-            <a asp-controller="Events" asp-action="Create" class="btn btn-primary btn-sm">
-                <i class="bi bi-plus-lg"></i> New Event
-            </a>
-        }
     </div>
 
     @if (Model != null && Model.Any())
@@ -184,19 +113,19 @@
                             <a asp-controller="RSVP" asp-action="EventDetails" asp-route-id="@ev.Id" class="fw-semibold fs-6" style="color: var(--octo-link);">
                                 <i class="bi bi-bookmark-fill me-1 small"></i> @ev.Title
                             </a>
-                            <span class="badge badge-going font-mono">Public</span>
+                            <span class="badge badge-going">Public</span>
                         </div>
 
                         <p class="text-muted small mb-3 flex-grow-1">
                             @(ev.Description?.Length > 110 ? ev.Description.Substring(0, 107) + "..." : ev.Description ?? "No description provided.")
                         </p>
 
-                        <!-- Card Footer: Metadata with JetBrains Mono numbers -->
-                        <div class="pt-2 border-top d-flex align-items-center justify-content-between text-muted small font-mono" style="border-color: var(--octo-border) !important;">
+                        <!-- Card Footer: Metadata -->
+                        <div class="pt-2 border-top d-flex align-items-center justify-content-between text-muted small" style="border-color: var(--octo-border) !important;">
                             <div class="d-flex align-items-center gap-3">
                                 <span>
                                     <span class="d-inline-block rounded-circle me-1" style="width: 10px; height: 10px; background-color: var(--octo-secondary);"></span>
-                                    @ev.Date.ToString("yyyy-MM-dd")
+                                    @ev.Date.ToString("MMM dd, yyyy")
                                 </span>
                                 <span>
                                     <i class="bi bi-geo-alt"></i> @ev.Venue
@@ -222,4 +151,50 @@
             </a>
         </div>
     }
+</section>
+
+<!-- Features Grid -->
+<section class="container-fluid px-lg-5 py-4 border-top" style="border-color: var(--octo-border) !important;">
+    <div class="mb-4">
+        <h2 class="h3 fw-semibold mb-1">Everything you need to run your event</h2>
+        <p class="text-muted mb-0">From sharing your invite to checking guests in at the door.</p>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-md-4">
+            <div class="card card-modern h-100 d-flex flex-column">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <span class="badge badge-primary"><i class="bi bi-link-45deg"></i></span>
+                    <h5 class="mb-0 fw-semibold">Share One Simple Link</h5>
+                </div>
+                <p class="text-muted small mb-0 flex-grow-1">
+                    Guests RSVP from a public link. No account or signup needed.
+                </p>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card card-modern h-100 d-flex flex-column">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <span class="badge badge-warning"><i class="bi bi-sliders"></i></span>
+                    <h5 class="mb-0 fw-semibold">Ask Your Own Questions</h5>
+                </div>
+                <p class="text-muted small mb-0 flex-grow-1">
+                    Add custom questions to your RSVP form, like meal choice, plus-ones, or accessibility needs.
+                </p>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card card-modern h-100 d-flex flex-column">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <span class="badge badge-going"><i class="bi bi-qr-code-scan"></i></span>
+                    <h5 class="mb-0 fw-semibold">Check Guests In Fast</h5>
+                </div>
+                <p class="text-muted small mb-0 flex-grow-1">
+                    Search your guest list and check people in with one tap. Turnout updates instantly.
+                </p>
+            </div>
+        </div>
+    </div>
 </section>

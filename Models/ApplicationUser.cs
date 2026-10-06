@@ -8,6 +8,7 @@ namespace EventEase.Models
     /// Represents an authenticated Event Organizer in the EventEase system.
     /// Stored as a document in the NoSQL "users" collection.
     /// </summary>
+    [BsonIgnoreExtraElements]
     public class ApplicationUser
     {
         [BsonId]

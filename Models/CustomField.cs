@@ -8,6 +8,7 @@ namespace EventEase.Models
     /// (e.g., Dietary Restriction, Equipment Needed, Organization, Course, etc.)
     /// In NoSQL, this is stored as an embedded document inside the Event document.
     /// </summary>
+    [BsonIgnoreExtraElements]
     public class CustomField
     {
         public int Id { get; set; }

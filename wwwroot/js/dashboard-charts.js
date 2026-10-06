@@ -79,14 +79,14 @@ function initDashboardCharts(monthlyData, rsvpData, eventAttendanceData) {
                         beginAtZero: true,
                         title: { display: true, text: 'Events', color: '#8B949E', font: { size: 11, weight: 600 } },
                         grid: { color: '#30363D' },
-                        ticks: { stepSize: 1, color: '#8B949E', font: { family: "'JetBrains Mono', monospace", size: 11 } }
+                        ticks: { stepSize: 1, precision: 0, color: '#8B949E', font: { family: "'JetBrains Mono', monospace", size: 11 } }
                     },
                     y1: {
                         beginAtZero: true,
                         position: 'right',
                         title: { display: true, text: 'Attendees', color: '#8B949E', font: { size: 11, weight: 600 } },
                         grid: { drawOnChartArea: false },
-                        ticks: { color: '#8B949E', font: { family: "'JetBrains Mono', monospace", size: 11 } }
+                        ticks: { stepSize: 1, precision: 0, color: '#8B949E', font: { family: "'JetBrains Mono', monospace", size: 11 } }
                     },
                     x: {
                         grid: { color: '#30363D' },

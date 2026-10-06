@@ -186,10 +186,13 @@
 
 @section Scripts {
     <script src="~/js/dashboard-charts.js" asp-append-version="true"></script>
+    @{
+        var jsonOptions = new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase };
+    }
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            var monthlyData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.MonthlyTrends));
-            var rsvpData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.RsvpDistribution));
+            var monthlyData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.MonthlyTrends, jsonOptions));
+            var rsvpData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.RsvpDistribution, jsonOptions));
             initDashboardCharts(monthlyData, rsvpData, null);
         });
     </script>

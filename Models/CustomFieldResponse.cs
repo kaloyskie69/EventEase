@@ -7,6 +7,7 @@ namespace EventEase.Models
     /// Stores the response to a specific custom question submitted during RSVP.
     /// In NoSQL, this is stored as an embedded document inside the RSVP document.
     /// </summary>
+    [BsonIgnoreExtraElements]
     public class CustomFieldResponse
     {
         public int Id { get; set; }

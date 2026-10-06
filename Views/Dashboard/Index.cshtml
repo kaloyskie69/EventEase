@@ -8,7 +8,7 @@
 <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
     <div>
         <h3 class="fw-semibold mb-1">Welcome back, @Model.OrganizerName</h3>
-        <p class="text-muted mb-0 font-mono small">Live event telemetry, RSVP streams, and check-in metrics.</p>
+        <p class="text-muted mb-0 small">Here's a live snapshot of your events, RSVPs, and guest check-ins.</p>
     </div>
     <div class="d-flex gap-2">
         <a asp-controller="Events" asp-action="Create" class="btn btn-primary">
@@ -149,7 +149,7 @@
     <div class="col-lg-8">
         <div class="card card-modern">
             <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 class="fw-semibold mb-0">Recent Event Repositories</h5>
+                <h5 class="fw-semibold mb-0">Recent Events</h5>
                 <a asp-controller="Events" asp-action="Index" class="btn btn-sm btn-outline-custom">
                     View All <i class="bi bi-arrow-right"></i>
                 </a>
@@ -298,11 +298,14 @@
 
 @section Scripts {
     <script src="~/js/dashboard-charts.js" asp-append-version="true"></script>
+    @{
+        var jsonOptions = new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase };
+    }
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            var monthlyData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.MonthlyStats));
-            var rsvpData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.RsvpDistribution));
-            var eventAttendanceData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.AttendanceByEvent));
+            var monthlyData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.MonthlyStats, jsonOptions));
+            var rsvpData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.RsvpDistribution, jsonOptions));
+            var eventAttendanceData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.AttendanceByEvent, jsonOptions));
             initDashboardCharts(monthlyData, rsvpData, eventAttendanceData);
         });
     </script>

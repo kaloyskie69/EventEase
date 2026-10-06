@@ -12,6 +12,13 @@ using Microsoft.Extensions.Hosting;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Register MongoDB convention pack to ignore extra elements globally
+var conventionPack = new MongoDB.Bson.Serialization.Conventions.ConventionPack
+{
+    new MongoDB.Bson.Serialization.Conventions.IgnoreExtraElementsConvention(true)
+};
+MongoDB.Bson.Serialization.Conventions.ConventionRegistry.Register("IgnoreExtraElements", conventionPack, t => true);
+
 // 1. Configure NoSQL MongoDB Context (Connects to MongoDB or local document store)
 builder.Services.AddSingleton<MongoDbContext>();
 

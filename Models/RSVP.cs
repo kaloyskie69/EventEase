@@ -10,6 +10,7 @@ namespace EventEase.Models
     /// Stored as a document in the NoSQL "rsvps" collection.
     /// Attendees do not need an account.
     /// </summary>
+    [BsonIgnoreExtraElements]
     public class RSVP
     {
         [BsonId]

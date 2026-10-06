@@ -9,6 +9,7 @@ namespace EventEase.Models
     /// Represents an Event created and managed by an Organizer.
     /// Stored as a document in the NoSQL "events" collection with embedded CustomFields.
     /// </summary>
+    [BsonIgnoreExtraElements]
     public class Event
     {
         [BsonId]
