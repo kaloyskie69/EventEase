@@ -7,8 +7,8 @@
 <!-- Welcome & Quick Actions -->
 <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
     <div>
-        <h3 class="fw-semibold mb-1">Welcome back, @Model.OrganizerName</h3>
-        <p class="text-muted mb-0 small">Here's a live snapshot of your events, RSVPs, and guest check-ins.</p>
+        <h3 class="fw-semibold mb-1">Welcome back</h3>
+        <p class="text-muted mb-0 small">Your events, RSVPs, and check-ins at a glance.</p>
     </div>
     <div class="d-flex gap-2">
         <a asp-controller="Events" asp-action="Create" class="btn btn-primary">
@@ -53,7 +53,7 @@
             </div>
             <div>
                 <div class="stat-value" style="color: var(--octo-warning);">@Model.TodayEventsCount</div>
-                <div class="stat-label">Today's Events</div>
+                <div class="stat-label">Happening today</div>
             </div>
         </div>
     </div>
@@ -89,7 +89,7 @@
             </div>
             <div>
                 <div class="stat-value" style="color: var(--octo-success);">@Model.OverallAttendanceRate%</div>
-                <div class="stat-label">Turnout Rate</div>
+                <div class="stat-label">Turnout</div>
             </div>
         </div>
     </div>
@@ -102,10 +102,10 @@
         <div class="card card-modern h-100">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <div>
-                    <h5 class="fw-semibold mb-0">Monthly Events & Attendance Trends</h5>
-                    <small class="text-muted font-mono">Hosted events vs recorded check-in headcount</small>
+                    <h5 class="fw-semibold mb-0">Events and attendance by month</h5>
+                    <small class="text-muted">Events you hosted vs. guests who showed up</small>
                 </div>
-                <span class="badge badge-neutral font-mono">Past 6 Months</span>
+                <span class="badge badge-neutral">Past 6 months</span>
             </div>
             <div style="position: relative; height: 260px;">
                 <canvas id="monthlyEventsChart"></canvas>
@@ -118,8 +118,8 @@
         <div class="card card-modern h-100">
             <div class="d-flex justify-content-between align-items-center mb-3">
                 <div>
-                    <h5 class="fw-semibold mb-0">RSVP Status Breakdown</h5>
-                    <small class="text-muted font-mono">Distribution across all events</small>
+                    <h5 class="fw-semibold mb-0">RSVP responses</h5>
+                    <small class="text-muted">How guests responded across all events</small>
                 </div>
             </div>
             <div style="position: relative; height: 210px;">
@@ -127,16 +127,16 @@
             </div>
             <div class="d-flex justify-content-around text-center pt-3 border-top mt-2" style="border-color: var(--octo-border) !important;">
                 <div>
-                    <div class="small text-muted font-mono">Going</div>
-                    <div class="fw-bold font-mono" style="color: var(--octo-success);">@Model.RsvpDistribution.GoingCount</div>
+                    <div class="small text-muted">Going</div>
+                    <div class="fw-bold" style="color: var(--octo-success);">@Model.RsvpDistribution.GoingCount</div>
                 </div>
                 <div>
-                    <div class="small text-muted font-mono">Maybe</div>
-                    <div class="fw-bold font-mono" style="color: var(--octo-warning);">@Model.RsvpDistribution.MaybeCount</div>
+                    <div class="small text-muted">Maybe</div>
+                    <div class="fw-bold" style="color: var(--octo-warning);">@Model.RsvpDistribution.MaybeCount</div>
                 </div>
                 <div>
-                    <div class="small text-muted font-mono">Not Going</div>
-                    <div class="fw-bold font-mono" style="color: var(--octo-error);">@Model.RsvpDistribution.NotGoingCount</div>
+                    <div class="small text-muted">Not going</div>
+                    <div class="fw-bold" style="color: var(--octo-error);">@Model.RsvpDistribution.NotGoingCount</div>
                 </div>
             </div>
         </div>
@@ -149,9 +149,9 @@
     <div class="col-lg-8">
         <div class="card card-modern">
             <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5 class="fw-semibold mb-0">Recent Events</h5>
+                <h5 class="fw-semibold mb-0">Recent events</h5>
                 <a asp-controller="Events" asp-action="Index" class="btn btn-sm btn-outline-custom">
-                    View All <i class="bi bi-arrow-right"></i>
+                    View all <i class="bi bi-arrow-right"></i>
                 </a>
             </div>
 
@@ -162,7 +162,7 @@
                         <thead>
                             <tr>
                                 <th>Event</th>
-                                <th>Schedule & Venue</th>
+                                <th>Date & venue</th>
                                 <th>Status</th>
                                 <th>RSVPs</th>
                                 <th>Turnout</th>
@@ -179,37 +179,37 @@
                                         </a>
                                         @if (ev.IsToday)
                                         {
-                                            <span class="badge badge-warning ms-1 font-mono">today</span>
+                                            <span class="badge badge-warning ms-1">Today</span>
                                         }
                                     </td>
                                     <td>
-                                        <div class="font-mono small">@ev.Date.ToString("yyyy-MM-dd")</div>
+                                        <div class="small">@ev.Date.ToString("MMM d, yyyy")</div>
                                         <div class="small text-muted">@ev.Venue</div>
                                     </td>
                                     <td>
                                         @if (ev.Status == "Upcoming")
                                         {
-                                            <span class="badge badge-going font-mono">upcoming</span>
+                                            <span class="badge badge-going">Upcoming</span>
                                         }
                                         else if (ev.Status == "Completed")
                                         {
-                                            <span class="badge badge-neutral font-mono">completed</span>
+                                            <span class="badge badge-neutral">Completed</span>
                                         }
                                         else
                                         {
-                                            <span class="badge badge-notgoing font-mono">cancelled</span>
+                                            <span class="badge badge-notgoing">Cancelled</span>
                                         }
                                     </td>
                                     <td>
-                                        <span class="font-mono small fw-semibold" style="color: var(--octo-success);">@ev.GoingCount</span>
-                                        <span class="text-muted font-mono small">/@ev.TotalRSVPs</span>
+                                        <span class="small fw-semibold" style="color: var(--octo-success);">@ev.GoingCount</span>
+                                        <span class="text-muted small"> of @ev.TotalRSVPs going</span>
                                     </td>
                                     <td>
                                         <div class="d-flex align-items-center gap-2">
                                             <div class="progress flex-grow-1" style="height: 6px; width: 60px;">
                                                 <div class="progress-bar" role="progressbar" style="width: @ev.AttendancePercentage%" aria-valuenow="@ev.AttendancePercentage" aria-valuemin="0" aria-valuemax="100"></div>
                                             </div>
-                                            <span class="small font-mono fw-semibold">@ev.AttendancePercentage%</span>
+                                            <span class="small fw-semibold">@ev.AttendancePercentage%</span>
                                         </div>
                                     </td>
                                     <td>
@@ -245,7 +245,7 @@
     <!-- Recent Activity Feed (Git Commit / Event Stream Style) -->
     <div class="col-lg-4">
         <div class="card card-modern">
-            <h5 class="fw-semibold mb-3">Activity Stream</h5>
+            <h5 class="fw-semibold mb-3">Recent activity</h5>
 
             @if (Model.RecentActivities.Any())
             {
@@ -270,16 +270,16 @@
                                     <span class="fw-semibold" style="color: var(--octo-text-primary);">@act.AttendeeName</span>
                                     @if (act.ActivityType == "CheckIn")
                                     {
-                                        <span class="text-success font-mono"> checked_in</span>
+                                        <span class="text-success"> checked in</span>
                                     }
                                     else
                                     {
-                                        <span class="text-muted font-mono"> rsvp: </span>
-                                        <span class="badge font-mono @(act.Status == "Going" ? "badge-going" : act.Status == "Maybe" ? "badge-maybe" : "badge-notgoing")">@act.Status.ToLower()</span>
+                                        <span class="text-muted"> replied </span>
+                                        <span class="badge @(act.Status == "Going" ? "badge-going" : act.Status == "Maybe" ? "badge-maybe" : "badge-notgoing")">@(act.Status == "Not Going" ? "Not going" : act.Status)</span>
                                     }
                                 </div>
                                 <div class="text-muted small">@act.EventTitle</div>
-                                <div class="text-muted font-mono" style="font-size: 11px;">@act.Timestamp.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</div>
+                                <div class="text-muted" style="font-size: 11px;">@act.Timestamp.ToLocalTime().ToString("MMM d, h:mm tt")</div>
                             </div>
                         </div>
                     }
@@ -287,9 +287,9 @@
             }
             else
             {
-                <div class="text-center py-4 text-muted small font-mono">
-                    <i class="bi bi-terminal fs-4 mb-2 d-block"></i>
-                    No activity stream recorded yet.
+                <div class="text-center py-4 text-muted small">
+                    <i class="bi bi-clock-history fs-4 mb-2 d-block"></i>
+                    No activity yet.
                 </div>
             }
         </div>

@@ -9,7 +9,7 @@
 <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
     <div>
         <h3 class="fw-semibold mb-1">Manage Events</h3>
-        <p class="text-muted mb-0 font-mono small">Event repositories, public RSVP links, and real-time attendance rosters.</p>
+        <p class="text-muted mb-0 small">Manage your events, view RSVPs, and check guests in.</p>
     </div>
     <div>
         <a asp-action="Create" class="btn btn-primary">
@@ -45,7 +45,7 @@
         <form method="get" asp-action="Index" class="d-flex gap-2 m-0">
             <input type="hidden" name="status" value="@currentStatus" />
             <div class="octo-search-container" style="max-width: 260px;">
-                <input type="text" name="search" value="@currentSearch" class="octo-search-input" placeholder="Filter events..." />
+                <input type="text" name="search" value="@currentSearch" class="octo-search-input" placeholder="Search events..." />
                 <kbd class="octo-search-kbd">/</kbd>
             </div>
             <button type="submit" class="btn btn-outline-custom btn-sm">Filter</button>
@@ -71,26 +71,26 @@
                         <div class="d-flex justify-content-between align-items-start mb-2">
                             @if (ev.Status == "Upcoming")
                             {
-                                <span class="badge badge-going font-mono">
-                                    <i class="bi bi-check-circle me-1"></i> upcoming
+                                <span class="badge badge-going">
+                                    <i class="bi bi-check-circle me-1"></i> Upcoming
                                 </span>
                             }
                             else if (ev.Status == "Completed")
                             {
-                                <span class="badge badge-neutral font-mono">
-                                    <i class="bi bi-flag me-1"></i> completed
+                                <span class="badge badge-neutral">
+                                    <i class="bi bi-flag me-1"></i> Completed
                                 </span>
                             }
                             else
                             {
-                                <span class="badge badge-notgoing font-mono">
-                                    <i class="bi bi-x-circle me-1"></i> cancelled
+                                <span class="badge badge-notgoing">
+                                    <i class="bi bi-x-circle me-1"></i> Cancelled
                                 </span>
                             }
 
                             @if (ev.IsToday)
                             {
-                                <span class="badge badge-warning font-mono"><i class="bi bi-lightning-fill"></i> today</span>
+                                <span class="badge badge-warning"><i class="bi bi-lightning-fill"></i> Today</span>
                             }
                         </div>
 
@@ -100,28 +100,28 @@
                             </a>
                         </h5>
 
-                        <div class="text-muted small mb-3 font-mono">
-                            <div class="mb-1"><i class="bi bi-calendar3 me-1"></i> @ev.Date.ToString("yyyy-MM-dd") • @ev.Time</div>
+                        <div class="text-muted small mb-3">
+                            <div class="mb-1"><i class="bi bi-calendar3 me-1"></i> @ev.Date.ToString("MMM d, yyyy") • @ev.Time</div>
                             <div><i class="bi bi-geo-alt me-1"></i> @ev.Venue</div>
                         </div>
 
                         <!-- RSVP & Attendance Statistics Bar -->
                         <div class="p-2 rounded mb-3" style="background-color: var(--octo-bg); border: 1px solid var(--octo-border);">
-                            <div class="d-flex justify-content-between text-center small mb-2 font-mono">
+                            <div class="d-flex justify-content-between text-center small mb-2">
                                 <div>
-                                    <span class="text-muted d-block" style="font-size: 10px;">RSVPS</span>
+                                    <span class="text-muted d-block" style="font-size: 10px;">RSVPs</span>
                                     <strong style="color: var(--octo-text-primary);">@ev.TotalRSVPs</strong>
                                 </div>
                                 <div class="border-start ps-2" style="border-color: var(--octo-border) !important;">
-                                    <span class="text-muted d-block" style="font-size: 10px;">GOING</span>
+                                    <span class="text-muted d-block" style="font-size: 10px;">Going</span>
                                     <strong style="color: var(--octo-success);">@ev.GoingCount</strong>
                                 </div>
                                 <div class="border-start ps-2" style="border-color: var(--octo-border) !important;">
-                                    <span class="text-muted d-block" style="font-size: 10px;">CHECKED IN</span>
+                                    <span class="text-muted d-block" style="font-size: 10px;">Checked in</span>
                                     <strong style="color: var(--octo-link);">@ev.CheckedInCount</strong>
                                 </div>
                                 <div class="border-start ps-2" style="border-color: var(--octo-border) !important;">
-                                    <span class="text-muted d-block" style="font-size: 10px;">RATE</span>
+                                    <span class="text-muted d-block" style="font-size: 10px;">Turnout</span>
                                     <strong style="color: var(--octo-success);">@ev.AttendancePercentage%</strong>
                                 </div>
                             </div>
@@ -141,7 +141,7 @@
                         }
                         else
                         {
-                            <span class="badge badge-neutral font-mono">Check-In Closed</span>
+                            <span class="badge badge-neutral">Check-in closed</span>
                         }
 
                         <div class="d-flex gap-1">
@@ -163,17 +163,17 @@
                     <div class="modal-dialog modal-dialog-centered">
                         <div class="modal-content">
                             <div class="modal-header">
-                                <h5 class="modal-title fw-semibold text-danger">Confirm Delete</h5>
+                                <h5 class="modal-title fw-semibold text-danger">Delete event</h5>
                                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                             </div>
                             <div class="modal-body py-3">
-                                Are you sure you want to permanently delete event <strong>@ev.Title</strong>? All associated RSVPs, custom question answers, and attendance records will be removed from the database.
+                                Are you sure you want to delete <strong>@ev.Title</strong>? This will permanently delete this event and all its RSVPs and check-in records.
                             </div>
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-outline-custom" data-bs-dismiss="modal">Cancel</button>
                                 <form asp-action="Delete" asp-route-id="@ev.Id" method="post" class="m-0">
                                     @Html.AntiForgeryToken()
-                                    <button type="submit" class="btn btn-danger">Yes, Delete Event</button>
+                                    <button type="submit" class="btn btn-danger">Delete event</button>
                                 </form>
                             </div>
                         </div>
@@ -187,11 +187,11 @@ else
 {
     <div class="empty-state">
         <i class="bi bi-calendar-x empty-state-icon"></i>
-        <h5 class="fw-semibold">No Events Found</h5>
+        <h5 class="fw-semibold">No events found</h5>
         <p class="text-muted small">
             @if (!string.IsNullOrEmpty(currentSearch) || currentStatus != "All")
             {
-                <span>No events match your current filter or search query.</span>
+                <span>No events match your search or filter.</span>
             }
             else
             {
@@ -201,9 +201,9 @@ else
         <div class="d-flex justify-content-center gap-2">
             @if (!string.IsNullOrEmpty(currentSearch) || currentStatus != "All")
             {
-                <a asp-action="Index" class="btn btn-outline-custom btn-sm">Clear Filter</a>
+                <a asp-action="Index" class="btn btn-outline-custom btn-sm">Clear filter</a>
             }
-            <a asp-action="Create" class="btn btn-primary btn-sm">Create New Event</a>
+            <a asp-action="Create" class="btn btn-primary btn-sm">Create event</a>
         </div>
     </div>
 }

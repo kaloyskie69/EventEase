@@ -27,14 +27,14 @@ function initDashboardCharts(monthlyData, rsvpData, eventAttendanceData) {
                 labels: labels,
                 datasets: [
                     {
-                        label: 'Events Created',
+                        label: 'Events',
                         data: eventCounts,
                         backgroundColor: '#2F81F7', // Mona Blue
                         borderRadius: 3,
                         yAxisID: 'y'
                     },
                     {
-                        label: 'Attendees Checked In',
+                        label: 'Guests checked in',
                         data: attendanceCounts,
                         type: 'line',
                         borderColor: '#3FB950', // Growth Green
@@ -70,8 +70,8 @@ function initDashboardCharts(monthlyData, rsvpData, eventAttendanceData) {
                         bodyColor: '#8B949E',
                         padding: 10,
                         cornerRadius: 6,
-                        titleFont: { family: "'JetBrains Mono', monospace", size: 12 },
-                        bodyFont: { family: "'JetBrains Mono', monospace", size: 12 }
+                        titleFont: { family: "'Inter', sans-serif", size: 12 },
+                        bodyFont: { family: "'Inter', sans-serif", size: 12 }
                     }
                 },
                 scales: {
@@ -79,14 +79,14 @@ function initDashboardCharts(monthlyData, rsvpData, eventAttendanceData) {
                         beginAtZero: true,
                         title: { display: true, text: 'Events', color: '#8B949E', font: { size: 11, weight: 600 } },
                         grid: { color: '#30363D' },
-                        ticks: { stepSize: 1, precision: 0, color: '#8B949E', font: { family: "'JetBrains Mono', monospace", size: 11 } }
+                        ticks: { stepSize: 1, precision: 0, color: '#8B949E', font: { family: "'Inter', sans-serif", size: 11 } }
                     },
                     y1: {
                         beginAtZero: true,
                         position: 'right',
                         title: { display: true, text: 'Attendees', color: '#8B949E', font: { size: 11, weight: 600 } },
                         grid: { drawOnChartArea: false },
-                        ticks: { stepSize: 1, precision: 0, color: '#8B949E', font: { family: "'JetBrains Mono', monospace", size: 11 } }
+                        ticks: { stepSize: 1, precision: 0, color: '#8B949E', font: { family: "'Inter', sans-serif", size: 11 } }
                     },
                     x: {
                         grid: { color: '#30363D' },
@@ -106,7 +106,7 @@ function initDashboardCharts(monthlyData, rsvpData, eventAttendanceData) {
         new Chart(rsvpCanvas, {
             type: 'doughnut',
             data: {
-                labels: ['Going', 'Maybe', 'Not Going'],
+                labels: ['Going', 'Maybe', 'Not going'],
                 datasets: [{
                     data: [rsvpData.goingCount, rsvpData.maybeCount, rsvpData.notGoingCount],
                     backgroundColor: ['#3FB950', '#D29922', '#F85149'], // Success, Warning, Error
@@ -136,8 +136,8 @@ function initDashboardCharts(monthlyData, rsvpData, eventAttendanceData) {
                         bodyColor: '#8B949E',
                         padding: 10,
                         cornerRadius: 6,
-                        titleFont: { family: "'JetBrains Mono', monospace", size: 12 },
-                        bodyFont: { family: "'JetBrains Mono', monospace", size: 12 }
+                        titleFont: { family: "'Inter', sans-serif", size: 12 },
+                        bodyFont: { family: "'Inter', sans-serif", size: 12 }
                     }
                 }
             }

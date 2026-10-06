@@ -30,7 +30,7 @@
             </div>
 
             <ul class="sidebar-nav">
-                <li class="sidebar-section-title">Navigation</li>
+                <li class="sidebar-section-title">Menu</li>
                 <li class="sidebar-item">
                     <a class="sidebar-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Dashboard" ? "active" : "")" asp-controller="Dashboard" asp-action="Index">
                         <i class="bi bi-speedometer2"></i>
@@ -38,7 +38,7 @@
                     </a>
                 </li>
 
-                <li class="sidebar-section-title">Event Operations</li>
+                <li class="sidebar-section-title">Events</li>
                 <li class="sidebar-item">
                     <a class="sidebar-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Events" && ViewContext.RouteData.Values["Action"]?.ToString() == "Index" ? "active" : "")" asp-controller="Events" asp-action="Index">
                         <i class="bi bi-calendar-event"></i>
@@ -52,18 +52,18 @@
                     </a>
                 </li>
 
-                <li class="sidebar-section-title">Analytics & Check-in</li>
+                <li class="sidebar-section-title">Insights</li>
                 <li class="sidebar-item">
                     <a class="sidebar-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Reports" ? "active" : "")" asp-controller="Reports" asp-action="Index">
                         <i class="bi bi-graph-up"></i>
-                        <span>Reports & Stats</span>
+                        <span>Reports</span>
                     </a>
                 </li>
             </ul>
 
             <div class="sidebar-footer">
                 <a asp-controller="Home" asp-action="Index" class="btn btn-outline-custom btn-sm w-100 mb-2 text-start">
-                    <i class="bi bi-box-arrow-up-right me-2"></i> Public View
+                    <i class="bi bi-box-arrow-up-right me-2"></i> View public site
                 </a>
                 <form asp-controller="Account" asp-action="Logout" method="post">
                     <button type="submit" class="btn btn-danger btn-sm w-100 text-start">
@@ -88,13 +88,13 @@
                     <!-- Search with / kbd -->
                     <div class="octo-search-container d-none d-md-block" style="max-width: 240px;">
                         <form method="get" asp-controller="Events" asp-action="Index" class="m-0">
-                            <input type="text" name="search" class="octo-search-input" placeholder="Type / to search..." id="adminSearchInput" />
+                            <input type="text" name="search" class="octo-search-input" placeholder="Search events..." id="adminSearchInput" />
                             <kbd class="octo-search-kbd">/</kbd>
                         </form>
                     </div>
 
                     <div class="d-flex align-items-center gap-2">
-                        <span class="d-none d-md-inline-block small text-muted font-mono">
+                        <span class="d-none d-md-inline-block small text-muted">
                             @User.Identity?.Name
                         </span>
                         <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; background: var(--octo-surface-hover); border: 1px solid var(--octo-border); color: var(--octo-link);">
