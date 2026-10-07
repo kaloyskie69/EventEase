@@ -6,7 +6,7 @@ Built strictly in accordance with the project proposal specifications, including
 
 ---
 
-## 🌟 Key Capabilities & Features
+## Key Capabilities & Features
 
 ### 1. Account-Free Attendee RSVPs
 - **Zero Registration Needed:** Attendees simply open the public link (e.g., `/RSVP/{eventId}`) and submit their response.
@@ -45,7 +45,7 @@ Built strictly in accordance with the project proposal specifications, including
 
 ---
 
-## 🏗️ Architecture & Technology Stack
+## Architecture & Technology Stack
 
 | Layer | Technology | Details |
 |:---|:---|:---|
@@ -58,7 +58,7 @@ Built strictly in accordance with the project proposal specifications, including
 
 ---
 
-## 🚀 How to Run in Visual Studio 2026 or VS Code
+## How to Run in Visual Studio 2026 or VS Code
 
 ### 1. Database Setup (MongoDB NoSQL)
 EventEase is built to be ultra-developer friendly:
@@ -95,7 +95,7 @@ EventEase is built to be ultra-developer friendly:
 
 ---
 
-## 🔑 Demo Organizer Credentials
+## Demo Organizer Credentials
 
 The database is pre-seeded with an organizer account and 4 sample events (including today's Charity Gala with live attendees):
 - **Email:** `organizer@eventease.com`
