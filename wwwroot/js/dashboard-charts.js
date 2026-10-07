@@ -213,6 +213,81 @@ function initDashboardCharts(monthlyData, rsvpData, eventAttendanceData) {
 // and disables animation so the canvas prints fully rendered.
 // ==========================================================================
 
+function saveChartSettings(chart) {
+    if (!chart || chart._origSettings) return;
+    var opts = chart.options || {};
+    var plugins = opts.plugins || {};
+    var legend = plugins.legend || {};
+    var labels = legend.labels || {};
+    var scales = opts.scales || {};
+    var x = scales.x || {};
+    var xTicks = x.ticks || {};
+    var xGrid = x.grid || {};
+    var y = scales.y || {};
+    var yTitle = y.title || {};
+    var yTicks = y.ticks || {};
+    var yGrid = y.grid || {};
+    var y1 = scales.y1 || {};
+    var y1Title = y1.title || {};
+    var y1Ticks = y1.ticks || {};
+
+    chart._origSettings = {
+        animation: opts.animation,
+        legendColor: labels.color,
+        xTicksColor: xTicks.color,
+        xGridColor: xGrid.color,
+        yTitleColor: yTitle.color,
+        yTicksColor: yTicks.color,
+        yGridColor: yGrid.color,
+        y1TitleColor: y1Title.color,
+        y1TicksColor: y1Ticks.color
+    };
+}
+
+function restoreChartSettings(chart) {
+    if (!chart || !chart._origSettings) return;
+    var s = chart._origSettings;
+    chart.options.animation = s.animation;
+
+    if (chart.options.plugins && chart.options.plugins.legend && chart.options.plugins.legend.labels) {
+        chart.options.plugins.legend.labels.color = s.legendColor;
+    }
+    if (chart.options.scales) {
+        if (chart.options.scales.x) {
+            if (chart.options.scales.x.ticks) chart.options.scales.x.ticks.color = s.xTicksColor;
+            if (chart.options.scales.x.grid) chart.options.scales.x.grid.color = s.xGridColor;
+        }
+        if (chart.options.scales.y) {
+            if (chart.options.scales.y.title) chart.options.scales.y.title.color = s.yTitleColor;
+            if (chart.options.scales.y.ticks) chart.options.scales.y.ticks.color = s.yTicksColor;
+            if (chart.options.scales.y.grid) chart.options.scales.y.grid.color = s.yGridColor;
+        }
+        if (chart.options.scales.y1) {
+            if (chart.options.scales.y1.title) chart.options.scales.y1.title.color = s.y1TitleColor;
+            if (chart.options.scales.y1.ticks) chart.options.scales.y1.ticks.color = s.y1TicksColor;
+        }
+    }
+}
+
+function resizeChartsForPrint() {
+    if (typeof Chart === 'undefined') return;
+
+    var monthlyCanvas = document.getElementById('monthlyEventsChart');
+    var rsvpCanvas = document.getElementById('rsvpDistributionChart');
+
+    var monthlyChart = monthlyCanvas ? Chart.getChart(monthlyCanvas) : null;
+    var rsvpChart = rsvpCanvas ? Chart.getChart(rsvpCanvas) : null;
+
+    if (monthlyChart) {
+        monthlyChart.resize();
+        monthlyChart.update('none');
+    }
+    if (rsvpChart) {
+        rsvpChart.resize();
+        rsvpChart.update('none');
+    }
+}
+
 function prepareChartsForPrint() {
     if (typeof Chart === 'undefined') return;
 
@@ -223,7 +298,7 @@ function prepareChartsForPrint() {
     var rsvpChart = rsvpCanvas ? Chart.getChart(rsvpCanvas) : null;
 
     if (monthlyChart) {
-        monthlyChart._origAnimation = monthlyChart.options.animation;
+        saveChartSettings(monthlyChart);
         monthlyChart.options.animation = false;
 
         if (monthlyChart.options.plugins && monthlyChart.options.plugins.legend && monthlyChart.options.plugins.legend.labels) {
@@ -256,23 +331,23 @@ function prepareChartsForPrint() {
                 monthlyChart.options.scales.y1.ticks.stepSize = 1;
             }
         }
-
-        monthlyChart.resize();
-        monthlyChart.update('none');
     }
 
     if (rsvpChart) {
-        rsvpChart._origAnimation = rsvpChart.options.animation;
+        saveChartSettings(rsvpChart);
         rsvpChart.options.animation = false;
 
         if (rsvpChart.options.plugins && rsvpChart.options.plugins.legend && rsvpChart.options.plugins.legend.labels) {
             rsvpChart.options.plugins.legend.labels.color = '#111111';
         }
+    }
 
-        rsvpChart.resize();
-        rsvpChart.update('none');
+    if (window.matchMedia && window.matchMedia('print').matches) {
+        resizeChartsForPrint();
     }
 }
+
+var _restoreRafId = null;
 
 function restoreChartsAfterPrint() {
     if (typeof Chart === 'undefined') return;
@@ -280,53 +355,67 @@ function restoreChartsAfterPrint() {
     var monthlyCanvas = document.getElementById('monthlyEventsChart');
     var rsvpCanvas = document.getElementById('rsvpDistributionChart');
 
+    if (monthlyCanvas) {
+        monthlyCanvas.style.removeProperty('width');
+        monthlyCanvas.style.removeProperty('height');
+    }
+    if (rsvpCanvas) {
+        rsvpCanvas.style.removeProperty('width');
+        rsvpCanvas.style.removeProperty('height');
+    }
+
     var monthlyChart = monthlyCanvas ? Chart.getChart(monthlyCanvas) : null;
     var rsvpChart = rsvpCanvas ? Chart.getChart(rsvpCanvas) : null;
 
     if (monthlyChart) {
-        monthlyChart.options.animation = monthlyChart._origAnimation !== undefined ? monthlyChart._origAnimation : true;
-
-        if (monthlyChart.options.plugins && monthlyChart.options.plugins.legend && monthlyChart.options.plugins.legend.labels) {
-            monthlyChart.options.plugins.legend.labels.color = '#8B949E';
-        }
-        if (monthlyChart.options.scales && monthlyChart.options.scales.x) {
-            if (monthlyChart.options.scales.x.ticks) monthlyChart.options.scales.x.ticks.color = '#8B949E';
-            if (monthlyChart.options.scales.x.grid) monthlyChart.options.scales.x.grid.color = '#30363D';
-        }
-        if (monthlyChart.options.scales && monthlyChart.options.scales.y) {
-            if (monthlyChart.options.scales.y.title) {
-                monthlyChart.options.scales.y.title.color = '#8B949E';
-                monthlyChart.options.scales.y.title.text = 'Events';
-            }
-            if (monthlyChart.options.scales.y.ticks) monthlyChart.options.scales.y.ticks.color = '#8B949E';
-            if (monthlyChart.options.scales.y.grid) monthlyChart.options.scales.y.grid.color = '#30363D';
-        }
-        if (monthlyChart.options.scales && monthlyChart.options.scales.y1) {
-            if (monthlyChart.options.scales.y1.title) {
-                monthlyChart.options.scales.y1.title.color = '#8B949E';
-                monthlyChart.options.scales.y1.title.text = 'Guests checked in';
-            }
-            if (monthlyChart.options.scales.y1.ticks) monthlyChart.options.scales.y1.ticks.color = '#8B949E';
-        }
-
-        monthlyChart.resize();
-        monthlyChart.update();
+        restoreChartSettings(monthlyChart);
     }
-
     if (rsvpChart) {
-        rsvpChart.options.animation = rsvpChart._origAnimation !== undefined ? rsvpChart._origAnimation : true;
-
-        if (rsvpChart.options.plugins && rsvpChart.options.plugins.legend && rsvpChart.options.plugins.legend.labels) {
-            rsvpChart.options.plugins.legend.labels.color = '#8B949E';
-        }
-
-        rsvpChart.resize();
-        rsvpChart.update();
+        restoreChartSettings(rsvpChart);
     }
+
+    if (_restoreRafId) cancelAnimationFrame(_restoreRafId);
+    _restoreRafId = requestAnimationFrame(function () {
+        _restoreRafId = requestAnimationFrame(function () {
+            _restoreRafId = null;
+            if (monthlyChart) {
+                monthlyChart.resize();
+                monthlyChart.update();
+            }
+            if (rsvpChart) {
+                rsvpChart.resize();
+                rsvpChart.update();
+            }
+        });
+    });
 }
 
 if (!window._dashboardChartsPrintBound) {
     window._dashboardChartsPrintBound = true;
+
     window.addEventListener('beforeprint', prepareChartsForPrint);
     window.addEventListener('afterprint', restoreChartsAfterPrint);
+
+    var _printMedia = window.matchMedia ? window.matchMedia('print') : null;
+    if (_printMedia) {
+        if (_printMedia.addEventListener) {
+            _printMedia.addEventListener('change', function (e) {
+                if (e.matches) {
+                    prepareChartsForPrint();
+                    resizeChartsForPrint();
+                } else {
+                    restoreChartsAfterPrint();
+                }
+            });
+        } else if (_printMedia.addListener) {
+            _printMedia.addListener(function (mql) {
+                if (mql.matches) {
+                    prepareChartsForPrint();
+                    resizeChartsForPrint();
+                } else {
+                    restoreChartsAfterPrint();
+                }
+            });
+        }
+    }
 }
