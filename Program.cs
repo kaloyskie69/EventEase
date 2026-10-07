@@ -78,7 +78,15 @@ using (var scope = app.Services.CreateScope())
     var services = scope.ServiceProvider;
     try
     {
+        // Self-heal: align MongoDB ID counters with existing data before any seeding/inserts
+        var context = services.GetRequiredService<MongoDbContext>();
+        await context.SynchronizeCountersAsync();
+
         await DbInitializer.InitializeAsync(services);
+
+        // Re-sync after seeding: the seeder inserts demo data with hardcoded IDs,
+        // so raise the counters to the actual max IDs to avoid duplicate _id errors.
+        await context.SynchronizeCountersAsync();
     }
     catch (Exception ex)
     {

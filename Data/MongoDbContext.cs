@@ -131,6 +131,44 @@ namespace EventEase.Data
             return await GetNextIdAsync("CustomFieldId");
         }
 
+        /// <summary>
+        /// Raises the MongoDB counter for the given name to at least <paramref name="minimumValue"/>.
+        /// Uses $max with upsert so the counter is only ever raised, never lowered. Idempotent.
+        /// No-op in local JSON mode (JSON counters are initialized from existing data automatically).
+        /// </summary>
+        public async Task EnsureCounterAtLeastAsync(string counterName, int minimumValue)
+        {
+            if (!_isMongoMode || _mongoDatabase == null || minimumValue <= 0)
+            {
+                return;
+            }
+
+            var counters = _mongoDatabase.GetCollection<Counter>("counters");
+            await counters.UpdateOneAsync(
+                Builders<Counter>.Filter.Eq(c => c.Id, counterName),
+                Builders<Counter>.Update.Max(c => c.Value, minimumValue),
+                new UpdateOptions { IsUpsert = true });
+        }
+
+        /// <summary>
+        /// Startup self-heal: synchronizes the MongoDB ID counters with the maximum IDs
+        /// already stored in the collections. This repairs databases where documents were
+        /// seeded or imported with hardcoded IDs while the counters were left uninitialized,
+        /// which otherwise causes E11000 duplicate key errors on the next inserts.
+        /// </summary>
+        public async Task SynchronizeCountersAsync()
+        {
+            if (!_isMongoMode || _mongoDatabase == null)
+            {
+                return;
+            }
+
+            await EnsureCounterAtLeastAsync("EventId", await Events.GetMaxIdAsync(e => e.Id));
+            await EnsureCounterAtLeastAsync("RsvpId", await RSVPs.GetMaxIdAsync(r => r.Id));
+            await EnsureCounterAtLeastAsync("AttendanceId", await Attendances.GetMaxIdAsync(a => a.Id));
+            await EnsureCounterAtLeastAsync("CustomFieldId", await GetMaxCustomFieldIdAsync());
+        }
+
         private async Task<int> GetNextIdAsync(string counterName)
         {
             if (_isMongoMode && _mongoDatabase != null)
