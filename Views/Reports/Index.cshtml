@@ -227,7 +227,7 @@
                             <td class="col-going text-nowrap" style="color: var(--octo-success);">@ev.GoingCount</td>
                             <td class="col-checkedin text-nowrap" style="color: var(--octo-link);">@ev.CheckedInCount</td>
                             <td class="col-turnout text-nowrap">
-                                @if (ev.GoingCount == 0)
+                                @if (ev.GoingCount == 0 || (ev.Status != "Completed" && !ev.IsPast))
                                 {
                                     <span class="text-muted">—</span>
                                 }

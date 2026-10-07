@@ -82,7 +82,23 @@ namespace EventEase.Services
                 }
                 if (r.Attendance != null && r.Attendance.CheckedIn) totalCheckedIn++;
             }
-            var overallAttendanceRate = goingRsvps > 0 ? Math.Round((double)totalCheckedIn / goingRsvps * 100, 1) : 0.0;
+
+            // Completed events only (past date or explicitly Completed), excluding Cancelled.
+            // Turnout and no-shows are measured against these so upcoming RSVPs don't dilute the numbers.
+            var completedEvents = events
+                .Where(e => e.Status != "Cancelled" && (e.Status == "Completed" || e.Date.Date < today))
+                .OrderByDescending(e => e.Date)
+                .ToList();
+
+            // Turnout: checked-in ÷ Going across completed events only (upcoming check-ins haven't started).
+            var completedGoing = 0;
+            var completedCheckedIn = 0;
+            foreach (var r in completedEvents.SelectMany(e => e.RSVPs))
+            {
+                if (r.Status == "Going") completedGoing++;
+                if (r.Attendance != null && r.Attendance.CheckedIn) completedCheckedIn++;
+            }
+            var overallAttendanceRate = completedGoing > 0 ? Math.Round((double)completedCheckedIn / completedGoing * 100, 1) : 0.0;
 
             // Map list view models
             var upcomingList = events.Where(e => e.Date.Date >= today && e.Status != "Cancelled")
@@ -157,13 +173,6 @@ namespace EventEase.Services
                     };
                 }).ToList();
 
-            // Completed events only (past date or explicitly Completed), excluding Cancelled.
-            // Used for the no-show count, where an upcoming event's 0 check-ins would be misleading.
-            var completedEvents = events
-                .Where(e => e.Status != "Cancelled" && (e.Status == "Completed" || e.Date.Date < today))
-                .OrderByDescending(e => e.Date)
-                .ToList();
-
             // Attendance chart: every non-cancelled event, newest first (newest renders at the top).
             // Upcoming events carry CheckedIn = null so no checked-in bar draws (check-in hasn't started).
             var chartEvents = events
@@ -183,7 +192,7 @@ namespace EventEase.Services
                         Date = e.Date,
                         Going = going,
                         CheckedIn = isUpcoming ? (int?)null : checkedIn,
-                        Turnout = going > 0 ? Math.Round((double)checkedIn / going * 100, 1) : 0.0,
+                        Turnout = isUpcoming || going == 0 ? (double?)null : Math.Round((double)checkedIn / going * 100, 1),
                         TotalRSVPs = e.RSVPs.Count,
                         IsUpcoming = isUpcoming
                     };

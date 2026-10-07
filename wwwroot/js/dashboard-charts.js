@@ -99,7 +99,7 @@ function initDashboardCharts(attendanceData, rsvpData, eventAttendanceData) {
                                 } else if (d.isUpcoming) {
                                     lines.push('Upcoming · check-in not started');
                                 } else {
-                                    lines.push('Turnout: ' + d.turnout + '%');
+                                    lines.push('Turnout: ' + (d.turnout === null || d.turnout === undefined ? '—' : d.turnout + '%'));
                                 }
                                 return lines;
                             }

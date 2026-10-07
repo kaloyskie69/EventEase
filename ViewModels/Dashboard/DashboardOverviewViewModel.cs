@@ -33,7 +33,7 @@ namespace EventEase.ViewModels.Dashboard
         public DateTime Date { get; set; }
         public int Going { get; set; }
         public int? CheckedIn { get; set; }
-        public double Turnout { get; set; }
+        public double? Turnout { get; set; }
         public int TotalRSVPs { get; set; }
         public bool IsUpcoming { get; set; }
     }
