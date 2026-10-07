@@ -44,11 +44,17 @@ document.addEventListener('DOMContentLoaded', function () {
             gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
             gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.35);
 
+            // Disconnect nodes when playback finishes to prevent audio graph memory leaks
+            osc.onended = function () {
+                try {
+                    osc.disconnect();
+                    gain.disconnect();
+                } catch (e) { }
+            };
+
             // Play tone and stop
             osc.start();
             osc.stop(audioCtx.currentTime + 0.35);
-
-            // Note: Nodes are automatically garbage collected after playback completes
         } catch (e) {
             // Audio features may be blocked by browser, disabled, or unavailable
             // Gracefully continue without audio feedback

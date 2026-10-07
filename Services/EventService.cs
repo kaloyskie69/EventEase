@@ -68,16 +68,17 @@ namespace EventEase.Services
             }).ToList();
         }
 
-        public async Task<EventDetailsViewModel?> GetEventDetailsAsync(int id, string? baseUrl = null)
+        public async Task<EventDetailsViewModel?> GetEventDetailsAsync(int id, string? organizerId = null, string? baseUrl = null)
         {
             var ev = await _eventRepository.GetByIdWithDetailsAsync(id);
             if (ev == null) return null;
+            if (!string.IsNullOrEmpty(organizerId) && ev.OrganizerId != organizerId) return null;
 
             // Cache RSVP list to avoid multiple enumerations
             var rsvpList = ev.RSVPs ?? new List<RSVP>();
             var going = rsvpList.Count(r => r.Status == "Going");
             var checkedIn = rsvpList.Count(r => r.Attendance != null && r.Attendance.CheckedIn);
-            var rate = going > 0 ? Math.Round((double)checkedIn / going * 100, 1) : 0.0;
+            var rate = going > 0 ? Math.Round((double)checkedIn / Math.Max(going, checkedIn) * 100, 1) : (checkedIn > 0 ? 100.0 : 0.0);
 
             var attendees = rsvpList.OrderByDescending(r => r.SubmittedAt).Select(r =>
             {
@@ -230,6 +231,7 @@ namespace EventEase.Services
                     .Where(cf => !string.IsNullOrWhiteSpace(cf.Label))
                     .Select(cf => new CustomField
                     {
+                        Id = cf.Id > 0 ? cf.Id : 0,
                         EventId = ev.Id,
                         Label = cf.Label.Trim(),
                         FieldType = string.IsNullOrWhiteSpace(cf.FieldType) ? "Text" : cf.FieldType,

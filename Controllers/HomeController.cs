@@ -18,9 +18,10 @@ namespace EventEase.Controllers
         [HttpGet]
         public async Task<IActionResult> Index()
         {
-            // Fetch up to 3 upcoming public events for the showcase section from NoSQL
+            var today = System.DateTime.Today;
             var events = await _context.Events.FindAsync(e => e.Status == "Upcoming");
             var upcomingEvents = events
+                .Where(e => e.Date.Date >= today)
                 .OrderBy(e => e.Date)
                 .Take(3)
                 .ToList();

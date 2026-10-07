@@ -8,7 +8,7 @@ namespace EventEase.Interfaces
     public interface IEventService
     {
         Task<IEnumerable<EventListItemViewModel>> GetEventsByOrganizerAsync(string organizerId, string? statusFilter = null, string? searchQuery = null);
-        Task<EventDetailsViewModel?> GetEventDetailsAsync(int id, string? baseUrl = null);
+        Task<EventDetailsViewModel?> GetEventDetailsAsync(int id, string? organizerId = null, string? baseUrl = null);
         Task<EventEditViewModel?> GetEventForEditAsync(int id, string organizerId);
         Task<Event> CreateEventAsync(string organizerId, EventCreateViewModel model);
         Task<bool> UpdateEventAsync(string organizerId, EventEditViewModel model);

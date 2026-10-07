@@ -61,7 +61,13 @@ builder.Services.AddScoped<IRSVPService, RSVPService>();
 builder.Services.AddScoped<IAttendanceService, AttendanceService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 
-// 6. Add MVC Controllers and Views
+// 6. Configure Antiforgery to support AJAX headers (e.g. Live Check-In)
+builder.Services.AddAntiforgery(options =>
+{
+    options.HeaderName = "RequestVerificationToken";
+});
+
+// 7. Add MVC Controllers and Views
 builder.Services.AddControllersWithViews();
 
 var app = builder.Build();

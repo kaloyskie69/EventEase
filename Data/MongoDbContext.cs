@@ -197,6 +197,7 @@ namespace EventEase.Data
             (RSVPs as IDisposable)?.Dispose();
             (Attendances as IDisposable)?.Dispose();
             (Users as IDisposable)?.Dispose();
+            _jsonCounterLock.Dispose();
         }
     }
 }

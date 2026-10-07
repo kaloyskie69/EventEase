@@ -97,6 +97,7 @@
                         var cf = Model.CustomFields[i];
                         var isDropdown = (cf.FieldType == "Dropdown");
                         <div class="custom-field-row card p-3 mb-3" data-index="@i">
+                            <input type="hidden" class="field-id" name="CustomFields[@i].Id" value="@cf.Id" />
                             <div class="row g-2 align-items-center">
                                 <div class="col-auto">
                                     <span class="badge badge-neutral font-mono field-index-badge">#@(i + 1)</span>

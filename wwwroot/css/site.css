@@ -814,3 +814,8 @@ footer {
     border-bottom: 1px solid var(--octo-border) !important;
     color: var(--octo-text-primary) !important;
 }
+
+/* ASP.NET Validation Summary Helper */
+.validation-summary-valid {
+    display: none !important;
+}

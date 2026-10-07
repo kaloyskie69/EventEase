@@ -96,7 +96,7 @@ namespace EventEase.Data
         public async Task<ApplicationUser?> FindByNameAsync(string normalizedUserName, CancellationToken cancellationToken)
         {
             var upper = normalizedUserName.ToUpperInvariant();
-            return await _context.Users.FindOneAsync(u => u.NormalizedUserName == upper || u.UserName.ToUpper() == upper);
+            return await _context.Users.FindOneAsync(u => u.NormalizedUserName == upper || u.UserName == normalizedUserName || u.UserName == upper);
         }
 
         public Task SetPasswordHashAsync(ApplicationUser user, string? passwordHash, CancellationToken cancellationToken)
@@ -140,7 +140,7 @@ namespace EventEase.Data
         public async Task<ApplicationUser?> FindByEmailAsync(string normalizedEmail, CancellationToken cancellationToken)
         {
             var upper = normalizedEmail.ToUpperInvariant();
-            return await _context.Users.FindOneAsync(u => u.NormalizedEmail == upper || u.Email.ToUpper() == upper);
+            return await _context.Users.FindOneAsync(u => u.NormalizedEmail == upper || u.Email == normalizedEmail || u.Email == upper);
         }
 
         public Task<string?> GetNormalizedEmailAsync(ApplicationUser user, CancellationToken cancellationToken)

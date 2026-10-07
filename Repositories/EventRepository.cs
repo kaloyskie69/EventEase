@@ -177,12 +177,12 @@ namespace EventEase.Repositories
         public async Task<bool> ExistsWithTitleAndDateAsync(string organizerId, string title, DateTime date, int? excludeId = null)
         {
             var normalizedTitle = title.Trim().ToLowerInvariant();
-            var matches = await _context.Events.FindAsync(e => 
-                e.OrganizerId == organizerId && 
+            var events = await _context.Events.FindAsync(e => e.OrganizerId == organizerId);
+            return events.Any(e => 
+                (!excludeId.HasValue || e.Id != excludeId.Value) &&
                 e.Date.Date == date.Date &&
-                e.NormalizedTitle == normalizedTitle);
-
-            return matches.Any(e => !excludeId.HasValue || e.Id != excludeId.Value);
+                ((e.NormalizedTitle != null && e.NormalizedTitle == normalizedTitle) || 
+                 e.Title.Trim().Equals(title.Trim(), StringComparison.OrdinalIgnoreCase)));
         }
 
         public async Task AddCustomFieldsAsync(IEnumerable<CustomField> customFields)

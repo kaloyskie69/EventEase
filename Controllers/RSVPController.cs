@@ -140,19 +140,19 @@ namespace EventEase.Controllers
             {
                 // Try to parse time range like "09:00 AM - 05:00 PM"
                 var timeParts = ev.Time.Split(new[] { "-", "–", "—" }, StringSplitOptions.RemoveEmptyEntries);
-                if (timeParts.Length >= 1 && DateTime.TryParse(timeParts[0].Trim(), out var parsedStart))
+                if (timeParts.Length >= 1 && DateTime.TryParse(timeParts[0].Trim(), System.Globalization.CultureInfo.InvariantCulture, out var parsedStart))
                 {
                     startDateTime = ev.Date.Date.Add(parsedStart.TimeOfDay);
                 }
-                if (timeParts.Length >= 2 && DateTime.TryParse(timeParts[1].Trim(), out var parsedEnd))
+                if (timeParts.Length >= 2 && DateTime.TryParse(timeParts[1].Trim(), System.Globalization.CultureInfo.InvariantCulture, out var parsedEnd))
                 {
                     endDateTime = ev.Date.Date.Add(parsedEnd.TimeOfDay);
                 }
-                else if (DateTime.TryParse(ev.Time, out var parsedDt))
+                else if (DateTime.TryParse(ev.Time, System.Globalization.CultureInfo.InvariantCulture, out var parsedDt))
                 {
                     startDateTime = ev.Date.Date.Add(parsedDt.TimeOfDay);
                 }
-                else if (TimeSpan.TryParse(ev.Time, out var parsedTs))
+                else if (TimeSpan.TryParse(ev.Time, System.Globalization.CultureInfo.InvariantCulture, out var parsedTs))
                 {
                     startDateTime = ev.Date.Date.Add(parsedTs);
                 }
@@ -176,7 +176,9 @@ namespace EventEase.Controllers
             sb.AppendLine("END:VCALENDAR");
 
             var bytes = Encoding.UTF8.GetBytes(sb.ToString());
-            return File(bytes, "text/calendar", $"{ev.Title.Replace(" ", "_")}.ics");
+            var safeTitle = string.Join("_", ev.Title.Split(Path.GetInvalidFileNameChars())).Replace(" ", "_");
+            if (string.IsNullOrWhiteSpace(safeTitle)) safeTitle = "Event";
+            return File(bytes, "text/calendar", $"{safeTitle}.ics");
         }
 
         private static string EscapeCalendarText(string value)

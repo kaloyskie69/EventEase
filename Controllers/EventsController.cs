@@ -39,11 +39,17 @@ namespace EventEase.Controllers
         [HttpGet]
         public async Task<IActionResult> Details(int id)
         {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+            {
+                return RedirectToAction("Login", "Account");
+            }
+
             var baseUrl = $"{Request.Scheme}://{Request.Host}";
-            var model = await _eventService.GetEventDetailsAsync(id, baseUrl);
+            var model = await _eventService.GetEventDetailsAsync(id, userId, baseUrl);
             if (model == null)
             {
-                TempData["ErrorMessage"] = "Event not found.";
+                TempData["ErrorMessage"] = "Event not found or access denied.";
                 return RedirectToAction(nameof(Index));
             }
 

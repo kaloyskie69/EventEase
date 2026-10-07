@@ -530,3 +530,8 @@
         font-weight: 700 !important;
     }
 }
+
+/* ASP.NET Validation Summary Helper */
+.validation-summary-valid {
+    display: none !important;
+}

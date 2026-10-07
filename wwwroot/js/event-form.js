@@ -31,7 +31,16 @@ document.addEventListener('DOMContentLoaded', function () {
             row.querySelector('.field-index-badge').innerText = "#" + (index + 1);
 
             var idInput = row.querySelector('.field-id');
-            if (idInput) idInput.name = `CustomFields[${index}].Id`;
+            if (idInput) {
+                idInput.name = `CustomFields[${index}].Id`;
+            } else {
+                var newId = document.createElement('input');
+                newId.type = 'hidden';
+                newId.className = 'field-id';
+                newId.name = `CustomFields[${index}].Id`;
+                newId.value = '0';
+                row.prepend(newId);
+            }
 
             var labelInput = row.querySelector('.field-label');
             if (labelInput) labelInput.name = `CustomFields[${index}].Label`;
@@ -53,7 +62,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // Function to add a new question row
-    window.addCustomFieldRow = function (labelVal, typeVal, requiredVal, optionsVal) {
+    window.addCustomFieldRow = function (labelVal, typeVal, requiredVal, optionsVal, idVal) {
         var index = container.querySelectorAll('.custom-field-row').length;
         var row = document.createElement('div');
         row.className = 'custom-field-row card card-modern p-3 mb-3';
@@ -62,6 +71,7 @@ document.addEventListener('DOMContentLoaded', function () {
         var isDropdown = (typeVal === 'Dropdown');
 
         row.innerHTML = `
+            <input type="hidden" class="field-id" value="${idVal || 0}" />
             <div class="row g-2 align-items-center">
                 <div class="col-auto">
                     <span class="badge badge-neutral font-mono field-index-badge">#${index + 1}</span>

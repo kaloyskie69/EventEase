@@ -292,11 +292,14 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script>
-        // Prevent double-submission of RSVP form
+        // Prevent double-submission of RSVP form when valid
         document.addEventListener('DOMContentLoaded', function() {
             var form = document.getElementById('rsvpForm');
             if (form) {
                 form.addEventListener('submit', function(e) {
+                    if (window.jQuery && typeof $(form).valid === 'function' && !$(form).valid()) {
+                        return;
+                    }
                     var submitBtn = form.querySelector('button[type="submit"]');
                     if (submitBtn && !submitBtn.disabled) {
                         submitBtn.disabled = true;
