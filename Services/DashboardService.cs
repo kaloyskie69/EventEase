@@ -39,7 +39,12 @@ namespace EventEase.Services
                 OverallAttendanceRate = overview.OverallAttendanceRate,
                 EventSummaries = eventSummaries,
                 RsvpDistribution = overview.RsvpDistribution,
-                MonthlyTrends = overview.MonthlyStats
+                MonthlyTrends = overview.MonthlyStats,
+                AttendanceChartEvents = overview.AttendanceChartEvents,
+                AttendanceChartTotalCount = overview.AttendanceChartTotalCount,
+                NoShowCount = overview.NoShowCount,
+                UpcomingMaybeCount = overview.UpcomingMaybeCount,
+                NextEvent = overview.NextEvent
             };
         }
 
@@ -152,6 +157,64 @@ namespace EventEase.Services
                     };
                 }).ToList();
 
+            // Completed events only (past date or explicitly Completed), excluding Cancelled.
+            // Used for the no-show count, where an upcoming event's 0 check-ins would be misleading.
+            var completedEvents = events
+                .Where(e => e.Status != "Cancelled" && (e.Status == "Completed" || e.Date.Date < today))
+                .OrderByDescending(e => e.Date)
+                .ToList();
+
+            // Attendance chart: every non-cancelled event, newest first (newest renders at the top).
+            // Upcoming events carry CheckedIn = null so no checked-in bar draws (check-in hasn't started).
+            var chartEvents = events
+                .Where(e => e.Status != "Cancelled")
+                .OrderByDescending(e => e.Date)
+                .ToList();
+
+            var attendanceChartEvents = chartEvents
+                .Select(e =>
+                {
+                    var isUpcoming = e.Status != "Completed" && e.Date.Date >= today;
+                    var going = e.RSVPs.Count(r => r.Status == "Going");
+                    var checkedIn = e.RSVPs.Count(r => r.Attendance != null && r.Attendance.CheckedIn);
+                    return new EventAttendanceChartItemViewModel
+                    {
+                        EventTitle = e.Title,
+                        Date = e.Date,
+                        Going = going,
+                        CheckedIn = isUpcoming ? (int?)null : checkedIn,
+                        Turnout = going > 0 ? Math.Round((double)checkedIn / going * 100, 1) : 0.0,
+                        TotalRSVPs = e.RSVPs.Count,
+                        IsUpcoming = isUpcoming
+                    };
+                }).ToList();
+
+            // No-shows: guests who RSVP'd Going but were not checked in, across completed events.
+            // Counted directly (not going - checkedIn) because a Maybe/walk-in check-in can make subtraction negative.
+            var noShowCount = completedEvents
+                .SelectMany(e => e.RSVPs)
+                .Count(r => r.Status == "Going" && (r.Attendance == null || !r.Attendance.CheckedIn));
+
+            // Maybe (undecided): "Maybe" RSVPs across upcoming events
+            var upcomingEvents = events
+                .Where(e => e.Date.Date >= today && e.Status != "Cancelled")
+                .ToList();
+            var upcomingMaybeCount = upcomingEvents
+                .SelectMany(e => e.RSVPs)
+                .Count(r => r.Status == "Maybe");
+
+            // Next event: nearest upcoming event
+            var nextEvent = upcomingEvents
+                .OrderBy(e => e.Date)
+                .Select(e => new NextEventCardViewModel
+                {
+                    Title = e.Title,
+                    Date = e.Date,
+                    TotalRSVPs = e.RSVPs.Count,
+                    GoingCount = e.RSVPs.Count(r => r.Status == "Going")
+                })
+                .FirstOrDefault();
+
             return new DashboardOverviewViewModel
             {
                 TotalEvents = totalEvents,
@@ -171,7 +234,12 @@ namespace EventEase.Services
                     MaybeCount = maybeRsvps,
                     NotGoingCount = notGoingRsvps
                 },
-                AttendanceByEvent = attendanceByEvent
+                AttendanceByEvent = attendanceByEvent,
+                AttendanceChartEvents = attendanceChartEvents,
+                AttendanceChartTotalCount = attendanceChartEvents.Count,
+                NoShowCount = noShowCount,
+                UpcomingMaybeCount = upcomingMaybeCount,
+                NextEvent = nextEvent
             };
         }
 

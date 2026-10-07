@@ -31,7 +31,7 @@
 
 <!-- 4 Key Reporting Cards -->
 <div class="row g-2 mb-4 stat-cards-row">
-    <div class="col-6 col-xl-3">
+    <div class="col-6 col-md-4 col-xl-3">
         <div class="stat-card">
             <div class="stat-icon primary">
                 <i class="bi bi-calendar-check"></i>
@@ -43,7 +43,7 @@
         </div>
     </div>
 
-    <div class="col-6 col-xl-3">
+    <div class="col-6 col-md-4 col-xl-3">
         <div class="stat-card">
             <div class="stat-icon info">
                 <i class="bi bi-envelope-paper"></i>
@@ -55,7 +55,7 @@
         </div>
     </div>
 
-    <div class="col-6 col-xl-3">
+    <div class="col-6 col-md-4 col-xl-3">
         <div class="stat-card">
             <div class="stat-icon success">
                 <i class="bi bi-person-check-fill"></i>
@@ -67,7 +67,7 @@
         </div>
     </div>
 
-    <div class="col-6 col-xl-3">
+    <div class="col-6 col-md-4 col-xl-3">
         <div class="stat-card">
             <div class="stat-icon success">
                 <i class="bi bi-pie-chart-fill"></i>
@@ -78,17 +78,80 @@
             </div>
         </div>
     </div>
+
+    <div class="col-6 col-md-4 col-xl-3">
+        <div class="stat-card">
+            <div class="stat-icon warning">
+                <i class="bi bi-person-dash-fill"></i>
+            </div>
+            <div>
+                <div class="stat-value" style="color: var(--octo-warning);">@Model.NoShowCount</div>
+                <div class="stat-label">No-shows</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12 col-md-8 col-xl-6 stat-card-wide">
+        <div class="stat-card">
+            <div class="stat-icon primary">
+                <i class="bi bi-calendar-event"></i>
+            </div>
+            <div class="flex-grow-1" style="min-width: 0;">
+                @if (Model.NextEvent != null)
+                {
+                    <div class="stat-value text-truncate" style="font-family: 'Inter', sans-serif; font-size: 18px;" title="@Model.NextEvent.Title">@Model.NextEvent.Title</div>
+                    <div class="stat-label text-truncate" title="@Model.NextEvent.Date.ToString("MMM d, yyyy", System.Globalization.CultureInfo.InvariantCulture) · @Model.NextEvent.TotalRSVPs RSVPs · @Model.NextEvent.GoingCount going">
+                        @Model.NextEvent.Date.ToString("MMM d, yyyy", System.Globalization.CultureInfo.InvariantCulture) · @Model.NextEvent.TotalRSVPs RSVPs · @Model.NextEvent.GoingCount going
+                    </div>
+                }
+                else
+                {
+                    <div class="stat-value" style="font-family: 'Inter', sans-serif; font-size: 18px;">No upcoming events</div>
+                    <div class="stat-label">Next event</div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="col-6 col-md-4 col-xl-3">
+        <div class="stat-card">
+            <div class="stat-icon warning">
+                <i class="bi bi-question-circle-fill"></i>
+            </div>
+            <div>
+                <div class="stat-value" style="color: var(--octo-warning);">@Model.UpcomingMaybeCount</div>
+                <div class="stat-label">Maybe (undecided)</div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Visual Charts Section -->
 <div class="row g-3 mb-4 charts-print-row">
     <div class="col-lg-8 chart-card-col-trend">
         <div class="card card-modern h-100">
-            <h5 class="fw-semibold mb-1">Events and attendance by month</h5>
-            <small class="text-muted mb-3 d-block">Events you hosted vs. guests who showed up</small>
-            <div class="chart-trend-container" style="position: relative; height: 280px;">
-                <canvas id="monthlyEventsChart"></canvas>
-            </div>
+            <h5 class="fw-semibold mb-1">Attendance by event</h5>
+            <small class="text-muted mb-3 d-block">Guests who said they were going vs. guests who showed up. Upcoming events show RSVPs only.</small>
+            @{
+                var chartEvents = Model.AttendanceChartEvents.Take(10).ToList();
+            }
+            @if (chartEvents.Any())
+            {
+                var chartHeight = Math.Max(240, chartEvents.Count * 56);
+                <div class="chart-trend-container" style="position: relative; height: @(chartHeight)px;">
+                    <canvas id="monthlyEventsChart"></canvas>
+                </div>
+                @if (Model.AttendanceChartTotalCount > chartEvents.Count)
+                {
+                    <small class="text-muted d-block mt-2">Showing latest @chartEvents.Count of @Model.AttendanceChartTotalCount events</small>
+                }
+            }
+            else
+            {
+                <div class="d-flex align-items-center justify-content-center text-muted small" style="min-height: 120px;">
+                    No events yet.
+                </div>
+            }
         </div>
     </div>
 
@@ -238,9 +301,9 @@
     }
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            var monthlyData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.MonthlyTrends, jsonOptions));
+            var attendanceData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(chartEvents, jsonOptions));
             var rsvpData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.RsvpDistribution, jsonOptions));
-            initDashboardCharts(monthlyData, rsvpData, null);
+            initDashboardCharts(attendanceData, rsvpData, null);
         });
     </script>
 }

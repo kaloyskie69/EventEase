@@ -27,6 +27,25 @@ namespace EventEase.ViewModels.Dashboard
         public double Percentage { get; set; }
     }
 
+    public class EventAttendanceChartItemViewModel
+    {
+        public string EventTitle { get; set; } = string.Empty;
+        public DateTime Date { get; set; }
+        public int Going { get; set; }
+        public int? CheckedIn { get; set; }
+        public double Turnout { get; set; }
+        public int TotalRSVPs { get; set; }
+        public bool IsUpcoming { get; set; }
+    }
+
+    public class NextEventCardViewModel
+    {
+        public string Title { get; set; } = string.Empty;
+        public DateTime Date { get; set; }
+        public int TotalRSVPs { get; set; }
+        public int GoingCount { get; set; }
+    }
+
     public class RecentActivityViewModel
     {
         public string AttendeeName { get; set; } = string.Empty;
@@ -58,5 +77,14 @@ namespace EventEase.ViewModels.Dashboard
         public List<MonthlyEventStatViewModel> MonthlyStats { get; set; } = new List<MonthlyEventStatViewModel>();
         public RsvpDistributionStatViewModel RsvpDistribution { get; set; } = new RsvpDistributionStatViewModel();
         public List<EventAttendanceStatViewModel> AttendanceByEvent { get; set; } = new List<EventAttendanceStatViewModel>();
+
+        // Per-event attendance chart (all non-cancelled events, newest first)
+        public List<EventAttendanceChartItemViewModel> AttendanceChartEvents { get; set; } = new List<EventAttendanceChartItemViewModel>();
+        public int AttendanceChartTotalCount { get; set; }
+
+        // Reports stat cards
+        public int NoShowCount { get; set; }
+        public int UpcomingMaybeCount { get; set; }
+        public NextEventCardViewModel? NextEvent { get; set; }
     }
 }

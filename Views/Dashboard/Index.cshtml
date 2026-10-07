@@ -97,19 +97,29 @@
 
 <!-- Charts Section -->
 <div class="row g-3 mb-4">
-    <!-- Monthly Events and Attendance Trends -->
+    <!-- Attendance by event -->
     <div class="col-lg-8">
         <div class="card card-modern h-100">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <div>
-                    <h5 class="fw-semibold mb-0">Events and attendance by month</h5>
-                    <small class="text-muted">Events you hosted vs. guests who showed up</small>
+            <div class="mb-3">
+                <h5 class="fw-semibold mb-0">Attendance by event</h5>
+                <small class="text-muted">Guests who said they were going vs. guests who showed up. Upcoming events show RSVPs only.</small>
+            </div>
+            @{
+                var chartEvents = Model.AttendanceChartEvents.Take(6).ToList();
+            }
+            @if (chartEvents.Any())
+            {
+                var chartHeight = Math.Max(240, chartEvents.Count * 56);
+                <div style="position: relative; height: @(chartHeight)px;">
+                    <canvas id="monthlyEventsChart"></canvas>
                 </div>
-                <span class="badge badge-neutral">Past 6 months</span>
-            </div>
-            <div style="position: relative; height: 260px;">
-                <canvas id="monthlyEventsChart"></canvas>
-            </div>
+            }
+            else
+            {
+                <div class="d-flex align-items-center justify-content-center text-muted small" style="min-height: 120px;">
+                    No events yet.
+                </div>
+            }
         </div>
     </div>
 
@@ -303,10 +313,9 @@
     }
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            var monthlyData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.MonthlyStats, jsonOptions));
+            var attendanceData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(chartEvents, jsonOptions));
             var rsvpData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.RsvpDistribution, jsonOptions));
-            var eventAttendanceData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.AttendanceByEvent, jsonOptions));
-            initDashboardCharts(monthlyData, rsvpData, eventAttendanceData);
+            initDashboardCharts(attendanceData, rsvpData, null);
         });
     </script>
 }

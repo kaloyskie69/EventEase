@@ -3,7 +3,7 @@
 // Developer-centric dark palette, JetBrains Mono font, and high-contrast accents
 // ==========================================================================
 
-function initDashboardCharts(monthlyData, rsvpData, eventAttendanceData) {
+function initDashboardCharts(attendanceData, rsvpData, eventAttendanceData) {
     if (typeof Chart === 'undefined') return;
 
     // Chart.js Octo Code dark theme defaults
@@ -11,15 +11,21 @@ function initDashboardCharts(monthlyData, rsvpData, eventAttendanceData) {
     Chart.defaults.color = "#8B949E"; // Octo text secondary
     Chart.defaults.borderColor = "#30363D"; // Octo border
 
-    // 1. Monthly Events & Attendance Chart
+    // 1. Going vs. checked in, by event (horizontal grouped bars, all events)
     var monthlyCanvas = document.getElementById('monthlyEventsChart');
-    if (monthlyCanvas && monthlyData) {
+    if (monthlyCanvas && attendanceData && attendanceData.length > 0) {
         var existingMonthly = Chart.getChart(monthlyCanvas);
         if (existingMonthly) existingMonthly.destroy();
 
-        var labels = monthlyData.map(function (d) { return d.monthLabel; });
-        var eventCounts = monthlyData.map(function (d) { return d.eventCount; });
-        var attendanceCounts = monthlyData.map(function (d) { return d.attendanceCount; });
+        // attendanceData is ordered newest-first so the newest event renders at the top.
+        var fullNames = attendanceData.map(function (d) { return d.eventTitle; });
+        var labels = attendanceData.map(function (d) {
+            var t = d.eventTitle || '';
+            return t.length > 24 ? t.substring(0, 21) + '...' : t;
+        });
+        var goingCounts = attendanceData.map(function (d) { return d.going; });
+        // Upcoming events have checkedIn === null so no checked-in bar draws.
+        var checkedInCounts = attendanceData.map(function (d) { return d.checkedIn; });
 
         new Chart(monthlyCanvas, {
             type: 'bar',
@@ -27,29 +33,21 @@ function initDashboardCharts(monthlyData, rsvpData, eventAttendanceData) {
                 labels: labels,
                 datasets: [
                     {
-                        label: 'Events',
-                        data: eventCounts,
-                        backgroundColor: '#2F81F7', // Mona Blue
-                        borderRadius: 3,
-                        yAxisID: 'y'
+                        label: 'Going',
+                        data: goingCounts,
+                        backgroundColor: '#3FB950', // Growth Green (same as RSVP donut "Going")
+                        borderRadius: 3
                     },
                     {
-                        label: 'Guests checked in',
-                        data: attendanceCounts,
-                        type: 'line',
-                        borderColor: '#3FB950', // Growth Green
-                        backgroundColor: 'rgba(63, 185, 80, 0.15)',
-                        tension: 0.25,
-                        fill: true,
-                        pointBackgroundColor: '#3FB950',
-                        pointBorderColor: '#161B22',
-                        pointBorderWidth: 2,
-                        pointRadius: 4,
-                        yAxisID: 'y1'
+                        label: 'Checked in',
+                        data: checkedInCounts,
+                        backgroundColor: '#2F81F7', // Mona Blue (existing blue)
+                        borderRadius: 3
                     }
                 ]
             },
             options: {
+                indexAxis: 'y',
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
@@ -60,6 +58,11 @@ function initDashboardCharts(monthlyData, rsvpData, eventAttendanceData) {
                             boxWidth: 12,
                             usePointStyle: true,
                             font: { size: 12, weight: 500 }
+                        },
+                        // Hide the "Checked in" legend entry when every event is upcoming.
+                        filter: function (item, data) {
+                            if (item.text !== 'Checked in') return true;
+                            return data.datasets[1].data.some(function (v) { return v !== null && v !== undefined; });
                         }
                     },
                     tooltip: {
@@ -71,25 +74,47 @@ function initDashboardCharts(monthlyData, rsvpData, eventAttendanceData) {
                         padding: 10,
                         cornerRadius: 6,
                         titleFont: { family: "'Inter', sans-serif", size: 12 },
-                        bodyFont: { family: "'Inter', sans-serif", size: 12 }
+                        bodyFont: { family: "'Inter', sans-serif", size: 12 },
+                        callbacks: {
+                            // Full event name as the tooltip title
+                            title: function (items) {
+                                return items.length ? fullNames[items[0].dataIndex] : '';
+                            },
+                            label: function (ctx) {
+                                var d = attendanceData[ctx.dataIndex];
+                                if (ctx.dataset.label === 'Checked in' && d.isUpcoming) {
+                                    return 'Checked in: —';
+                                }
+                                return ctx.dataset.label + ': ' + ctx.raw;
+                            },
+                            // Append date + status note after the dataset lines
+                            afterBody: function (items) {
+                                if (!items.length) return;
+                                var d = attendanceData[items[0].dataIndex];
+                                var date = new Date(d.date);
+                                var dateStr = isNaN(date) ? '' : date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+                                var lines = [dateStr];
+                                if ((d.totalRSVPs || 0) === 0) {
+                                    lines.push('No RSVPs');
+                                } else if (d.isUpcoming) {
+                                    lines.push('Upcoming · check-in not started');
+                                } else {
+                                    lines.push('Turnout: ' + d.turnout + '%');
+                                }
+                                return lines;
+                            }
+                        }
                     }
                 },
                 scales: {
-                    y: {
-                        beginAtZero: true,
-                        title: { display: true, text: 'Events', color: '#8B949E', font: { size: 11, weight: 600 } },
-                        grid: { color: '#30363D' },
-                        ticks: { stepSize: 1, precision: 0, color: '#8B949E', font: { family: "'Inter', sans-serif", size: 11 } }
-                    },
-                    y1: {
-                        beginAtZero: true,
-                        position: 'right',
-                        title: { display: true, text: 'Guests checked in', color: '#8B949E', font: { size: 11, weight: 600 } },
-                        grid: { drawOnChartArea: false },
-                        ticks: { stepSize: 1, precision: 0, color: '#8B949E', font: { family: "'Inter', sans-serif", size: 11 } }
-                    },
                     x: {
+                        beginAtZero: true,
+                        title: { display: true, text: 'Guests', color: '#8B949E', font: { size: 11, weight: 600 } },
                         grid: { color: '#30363D' },
+                        ticks: { stepSize: 1, precision: 0, color: '#8B949E', font: { family: "'Inter', sans-serif", size: 11 } }
+                    },
+                    y: {
+                        grid: { display: false },
                         ticks: { color: '#8B949E', font: { size: 12 } }
                     }
                 }
@@ -97,11 +122,35 @@ function initDashboardCharts(monthlyData, rsvpData, eventAttendanceData) {
         });
     }
 
-    // 2. RSVP Distribution Donut Chart
+    // 2. RSVP Distribution Donut Chart (with total responses in the center)
     var rsvpCanvas = document.getElementById('rsvpDistributionChart');
     if (rsvpCanvas && rsvpData) {
         var existingRsvp = Chart.getChart(rsvpCanvas);
         if (existingRsvp) existingRsvp.destroy();
+
+        var totalResponses = (rsvpData.goingCount || 0) + (rsvpData.maybeCount || 0) + (rsvpData.notGoingCount || 0);
+
+        // Inline plugin: draw the total response count in the donut center.
+        var donutCenterText = {
+            id: 'donutCenterText',
+            afterDraw: function (chart) {
+                var meta = chart.getDatasetMeta(0);
+                if (!meta || !meta.data || !meta.data.length) return;
+                var x = meta.data[0].x;
+                var y = meta.data[0].y;
+                var ctx = chart.ctx;
+                ctx.save();
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.font = "600 24px 'Inter', sans-serif";
+                ctx.fillStyle = '#E6EDF3';
+                ctx.fillText(String(totalResponses), x, y - 8);
+                ctx.font = "500 11px 'Inter', sans-serif";
+                ctx.fillStyle = '#8B949E';
+                ctx.fillText('responses', x, y + 12);
+                ctx.restore();
+            }
+        };
 
         new Chart(rsvpCanvas, {
             type: 'doughnut',
@@ -140,7 +189,8 @@ function initDashboardCharts(monthlyData, rsvpData, eventAttendanceData) {
                         bodyFont: { family: "'Inter', sans-serif", size: 12 }
                     }
                 }
-            }
+            },
+            plugins: [donutCenterText]
         });
     }
 
@@ -308,28 +358,17 @@ function prepareChartsForPrint() {
             if (monthlyChart.options.scales.x.ticks) monthlyChart.options.scales.x.ticks.color = '#111111';
             if (monthlyChart.options.scales.x.grid) monthlyChart.options.scales.x.grid.color = '#dddddd';
         }
+        if (monthlyChart.options.scales && monthlyChart.options.scales.x && monthlyChart.options.scales.x.title) {
+            monthlyChart.options.scales.x.title.color = '#111111';
+        }
         if (monthlyChart.options.scales && monthlyChart.options.scales.y) {
             if (monthlyChart.options.scales.y.title) {
                 monthlyChart.options.scales.y.title.color = '#111111';
-                monthlyChart.options.scales.y.title.text = 'Events';
             }
             if (monthlyChart.options.scales.y.ticks) {
                 monthlyChart.options.scales.y.ticks.color = '#111111';
-                monthlyChart.options.scales.y.ticks.precision = 0;
-                monthlyChart.options.scales.y.ticks.stepSize = 1;
             }
             if (monthlyChart.options.scales.y.grid) monthlyChart.options.scales.y.grid.color = '#dddddd';
-        }
-        if (monthlyChart.options.scales && monthlyChart.options.scales.y1) {
-            if (monthlyChart.options.scales.y1.title) {
-                monthlyChart.options.scales.y1.title.color = '#111111';
-                monthlyChart.options.scales.y1.title.text = 'Guests checked in';
-            }
-            if (monthlyChart.options.scales.y1.ticks) {
-                monthlyChart.options.scales.y1.ticks.color = '#111111';
-                monthlyChart.options.scales.y1.ticks.precision = 0;
-                monthlyChart.options.scales.y1.ticks.stepSize = 1;
-            }
         }
     }
 
