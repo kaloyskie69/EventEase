@@ -1,6 +1,6 @@
 # EventEase: A Web-Based Event RSVP and Attendance Tracking System
 
-EventEase is a production-quality, enterprise-grade web application designed to replace paper attendance sheets, manual RSVP forms, and scattered headcounts for school, organizational, corporate, and community events.
+EventEase is a web application designed to replace paper attendance sheets, manual RSVP forms, and scattered headcounts for school, organizational, corporate, and community events.
 
 Built strictly in accordance with the project proposal specifications, including **Objective #5: "To store event data in a flexible, NoSQL-based database that supports event-specific custom fields."**
 
