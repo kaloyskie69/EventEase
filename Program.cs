@@ -6,23 +6,18 @@ using EventEase.Repositories;
 using EventEase.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Register MongoDB convention pack to ignore extra elements globally
-var conventionPack = new MongoDB.Bson.Serialization.Conventions.ConventionPack
-{
-    new MongoDB.Bson.Serialization.Conventions.IgnoreExtraElementsConvention(true)
-};
-MongoDB.Bson.Serialization.Conventions.ConventionRegistry.Register("IgnoreExtraElements", conventionPack, t => true);
+// 1. Configure Entity Framework Core DbContext
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// 1. Configure NoSQL MongoDB Context (Connects to MongoDB or local document store)
-builder.Services.AddSingleton<MongoDbContext>();
-
-// 2. Configure ASP.NET Identity with NoSQL MongoDB Stores
+// 2. Configure ASP.NET Identity with Entity Framework Core Stores
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 {
     // Password settings
@@ -36,8 +31,7 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
     // User settings
     options.User.RequireUniqueEmail = true;
 })
-.AddUserStore<MongoUserStore>()
-.AddRoleStore<MongoRoleStore>()
+.AddEntityFrameworkStores<ApplicationDbContext>()
 .AddDefaultTokenProviders();
 
 // 3. Configure Cookie Settings
@@ -50,7 +44,7 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.SlidingExpiration = true;
 });
 
-// 4. Register Dependency Injection Repositories (Repository Pattern on NoSQL)
+// 4. Register Dependency Injection Repositories (Repository Pattern on EF Core)
 builder.Services.AddScoped<IEventRepository, EventRepository>();
 builder.Services.AddScoped<IRSVPRepository, RSVPRepository>();
 builder.Services.AddScoped<IAttendanceRepository, AttendanceRepository>();
@@ -72,30 +66,25 @@ builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
 
-// 7. Seed NoSQL Database on Startup
+// 8. Auto-migrate and Seed Database on Startup
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
     try
     {
-        // Self-heal: align MongoDB ID counters with existing data before any seeding/inserts
-        var context = services.GetRequiredService<MongoDbContext>();
-        await context.SynchronizeCountersAsync();
+        var db = services.GetRequiredService<ApplicationDbContext>();
+        await db.Database.MigrateAsync();
 
         await DbInitializer.InitializeAsync(services);
-
-        // Re-sync after seeding: the seeder inserts demo data with hardcoded IDs,
-        // so raise the counters to the actual max IDs to avoid duplicate _id errors.
-        await context.SynchronizeCountersAsync();
     }
     catch (Exception ex)
     {
         var logger = services.GetRequiredService<Microsoft.Extensions.Logging.ILogger<Program>>();
-        logger.LogError(ex, "An error occurred while seeding the NoSQL database.");
+        logger.LogError(ex, "An error occurred while migrating or seeding the database.");
     }
 }
 
-// 8. Configure HTTP Request Pipeline
+// 9. Configure HTTP Request Pipeline
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");

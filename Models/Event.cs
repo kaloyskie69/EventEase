@@ -1,24 +1,24 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using MongoDB.Bson.Serialization.Attributes;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace EventEase.Models
 {
     /// <summary>
     /// Represents an Event created and managed by an Organizer.
-    /// Stored as a document in the NoSQL "events" collection with embedded CustomFields.
+    /// Stored in the relational database via Entity Framework Core.
     /// </summary>
-    [BsonIgnoreExtraElements]
     public class Event
     {
-        [BsonId]
+        [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
 
         [Required]
         public string OrganizerId { get; set; } = string.Empty;
 
-        [BsonIgnore]
+        [ForeignKey(nameof(OrganizerId))]
         public virtual ApplicationUser? Organizer { get; set; }
 
         [Required(ErrorMessage = "Event title is required.")]
@@ -54,15 +54,13 @@ namespace EventEase.Models
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         /// <summary>
-        /// Embedded NoSQL Document Array: Custom questions for this specific event.
-        /// NoSQL allows flexible, event-specific fields without database schema alterations.
+        /// Relational Navigation: Custom questions for this specific event.
         /// </summary>
         public virtual List<CustomField> CustomFields { get; set; } = new List<CustomField>();
 
         /// <summary>
-        /// Related RSVPs associated in-memory for views and reporting.
+        /// Relational Navigation: RSVPs for this event.
         /// </summary>
-        [BsonIgnore]
         public virtual List<RSVP> RSVPs { get; set; } = new List<RSVP>();
     }
 }

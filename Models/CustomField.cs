@@ -1,21 +1,21 @@
 using System.ComponentModel.DataAnnotations;
-using MongoDB.Bson.Serialization.Attributes;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace EventEase.Models
 {
     /// <summary>
     /// Represents a dynamic custom question associated with an Event
     /// (e.g., Dietary Restriction, Equipment Needed, Organization, Course, etc.)
-    /// In NoSQL, this is stored as an embedded document inside the Event document.
     /// </summary>
-    [BsonIgnoreExtraElements]
     public class CustomField
     {
+        [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
 
         public int EventId { get; set; }
 
-        [BsonIgnore]
+        [ForeignKey(nameof(EventId))]
         public virtual Event? Event { get; set; }
 
         [Required(ErrorMessage = "Field label is required.")]

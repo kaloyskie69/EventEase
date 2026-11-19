@@ -3,14 +3,15 @@ using System.Linq;
 using System.Threading.Tasks;
 using EventEase.Data;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace EventEase.Controllers
 {
     public class HomeController : Controller
     {
-        private readonly MongoDbContext _context;
+        private readonly ApplicationDbContext _context;
 
-        public HomeController(MongoDbContext context)
+        public HomeController(ApplicationDbContext context)
         {
             _context = context;
         }
@@ -19,12 +20,11 @@ namespace EventEase.Controllers
         public async Task<IActionResult> Index()
         {
             var today = System.DateTime.Today;
-            var events = await _context.Events.FindAsync(e => e.Status == "Upcoming");
-            var upcomingEvents = events
-                .Where(e => e.Date.Date >= today)
+            var upcomingEvents = await _context.Events
+                .Where(e => e.Status == "Upcoming" && e.Date >= today)
                 .OrderBy(e => e.Date)
                 .Take(3)
-                .ToList();
+                .ToListAsync();
 
             return View(upcomingEvents);
         }

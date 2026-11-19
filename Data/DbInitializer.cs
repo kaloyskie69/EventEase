@@ -4,20 +4,21 @@ using System.Linq;
 using System.Threading.Tasks;
 using EventEase.Models;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace EventEase.Data
 {
     /// <summary>
-    /// Seeds default organizer accounts, demo events with embedded custom fields,
-    /// RSVPs, and attendance records into the NoSQL database on application startup.
+    /// Seeds default organizer accounts, demo events with custom fields,
+    /// RSVPs, and attendance records into the relational database on application startup.
     /// </summary>
     public static class DbInitializer
     {
         public static async Task InitializeAsync(IServiceProvider serviceProvider)
         {
             using var scope = serviceProvider.CreateScope();
-            var context = scope.ServiceProvider.GetRequiredService<MongoDbContext>();
+            var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
             var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
 
             // 1. Seed default Organizer account if not exists
@@ -27,7 +28,6 @@ namespace EventEase.Data
             {
                 organizer = new ApplicationUser
                 {
-                    Id = Guid.NewGuid().ToString(),
                     UserName = organizerEmail,
                     Email = organizerEmail,
                     FullName = "Alex Morgan",
@@ -42,16 +42,14 @@ namespace EventEase.Data
                 }
             }
 
-            // 2. Seed events if no events exist in the NoSQL database
-            var existingEvents = await context.Events.FindAllAsync();
-            if (!existingEvents.Any())
+            // 2. Seed events if no events exist in the database
+            if (!await db.Events.AnyAsync())
             {
                 var today = DateTime.Today;
 
                 // Event 1: Tech Innovation Summit (Upcoming)
                 var event1 = new Event
                 {
-                    Id = 1,
                     OrganizerId = organizer.Id,
                     Title = "Tech Innovation Summit 2026",
                     NormalizedTitle = "tech innovation summit 2026",
@@ -63,16 +61,15 @@ namespace EventEase.Data
                     CreatedAt = DateTime.UtcNow.AddDays(-15),
                     CustomFields = new List<CustomField>
                     {
-                        new CustomField { Id = 1, EventId = 1, Label = "Dietary Restriction", FieldType = "Dropdown", Required = true, Options = "None,Vegetarian,Vegan,Halal,Gluten-Free" },
-                        new CustomField { Id = 2, EventId = 1, Label = "Organization / Company", FieldType = "Text", Required = true },
-                        new CustomField { Id = 3, EventId = 1, Label = "T-Shirt Size", FieldType = "Dropdown", Required = false, Options = "S,M,L,XL,XXL" }
+                        new CustomField { Label = "Dietary Restriction", FieldType = "Dropdown", Required = true, Options = "None,Vegetarian,Vegan,Halal,Gluten-Free" },
+                        new CustomField { Label = "Organization / Company", FieldType = "Text", Required = true },
+                        new CustomField { Label = "T-Shirt Size", FieldType = "Dropdown", Required = false, Options = "S,M,L,XL,XXL" }
                     }
                 };
 
                 // Event 2: Today's Event - Annual Charity Gala
                 var event2 = new Event
                 {
-                    Id = 2,
                     OrganizerId = organizer.Id,
                     Title = "Annual Charity Gala & Silent Auction",
                     NormalizedTitle = "annual charity gala & silent auction",
@@ -84,15 +81,14 @@ namespace EventEase.Data
                     CreatedAt = DateTime.UtcNow.AddDays(-20),
                     CustomFields = new List<CustomField>
                     {
-                        new CustomField { Id = 4, EventId = 2, Label = "Food Preference", FieldType = "Dropdown", Required = true, Options = "Salmon Fillet,Herb-Crusted Filet Mignon,Truffle Risotto (Vegan)" },
-                        new CustomField { Id = 5, EventId = 2, Label = "Table Seating Group", FieldType = "Text", Required = false }
+                        new CustomField { Label = "Food Preference", FieldType = "Dropdown", Required = true, Options = "Salmon Fillet,Herb-Crusted Filet Mignon,Truffle Risotto (Vegan)" },
+                        new CustomField { Label = "Table Seating Group", FieldType = "Text", Required = false }
                     }
                 };
 
                 // Event 3: University Hackathon 2026
                 var event3 = new Event
                 {
-                    Id = 3,
                     OrganizerId = organizer.Id,
                     Title = "Intercollegiate Code Sprint Hackathon",
                     NormalizedTitle = "intercollegiate code sprint hackathon",
@@ -104,16 +100,15 @@ namespace EventEase.Data
                     CreatedAt = DateTime.UtcNow.AddDays(-5),
                     CustomFields = new List<CustomField>
                     {
-                        new CustomField { Id = 6, EventId = 3, Label = "Course / Major", FieldType = "Text", Required = true },
-                        new CustomField { Id = 7, EventId = 3, Label = "Student Number", FieldType = "Text", Required = true },
-                        new CustomField { Id = 8, EventId = 3, Label = "Equipment Needed", FieldType = "Dropdown", Required = false, Options = "None,External Monitor,Extension Cord,Soldering Kit" }
+                        new CustomField { Label = "Course / Major", FieldType = "Text", Required = true },
+                        new CustomField { Label = "Student Number", FieldType = "Text", Required = true },
+                        new CustomField { Label = "Equipment Needed", FieldType = "Dropdown", Required = false, Options = "None,External Monitor,Extension Cord,Soldering Kit" }
                     }
                 };
 
                 // Event 4: Past Completed Event
                 var event4 = new Event
                 {
-                    Id = 4,
                     OrganizerId = organizer.Id,
                     Title = "AI & Machine Learning Workshop",
                     NormalizedTitle = "ai & machine learning workshop",
@@ -125,12 +120,14 @@ namespace EventEase.Data
                     CreatedAt = DateTime.UtcNow.AddMonths(-2)
                 };
 
-                await context.Events.InsertOneAsync(event1);
-                await context.Events.InsertOneAsync(event2);
-                await context.Events.InsertOneAsync(event3);
-                await context.Events.InsertOneAsync(event4);
+                db.Events.AddRange(event1, event2, event3, event4);
+                await db.SaveChangesAsync();
 
                 // Seed RSVPs and Attendance for Event 2 (Gala - Today's Event)
+                var galaCustomFields = event2.CustomFields.ToList();
+                var foodField = galaCustomFields.FirstOrDefault(cf => cf.Label == "Food Preference");
+                var seatingField = galaCustomFields.FirstOrDefault(cf => cf.Label == "Table Seating Group");
+
                 var galaRsvps = new List<(string Name, string Email, string Phone, string Status, string Food, string Seating, bool CheckedIn)>
                 {
                     ("Elena Rostova", "elena.rostova@example.com", "+1 555-0192", "Going", "Salmon Fillet", "Table 1 - Sponsors", true),
@@ -143,39 +140,51 @@ namespace EventEase.Data
                     ("Thomas Vance", "tvance@industrialcorp.com", "+1 555-0131", "Not Going", "None", "", false)
                 };
 
-                var rsvpId = 1;
                 foreach (var item in galaRsvps)
                 {
                     var rsvp = new RSVP
                     {
-                        Id = rsvpId,
                         EventId = event2.Id,
                         FullName = item.Name,
                         Email = item.Email,
                         Phone = item.Phone,
                         Status = item.Status,
                         SubmittedAt = DateTime.UtcNow.AddDays(-7).AddHours(item.Name.Length),
-                        CustomFieldResponses = new List<CustomFieldResponse>
-                        {
-                            new CustomFieldResponse { Id = 1, RSVPId = rsvpId, CustomFieldId = 4, Response = item.Food },
-                            new CustomFieldResponse { Id = 2, RSVPId = rsvpId, CustomFieldId = 5, Response = item.Seating }
-                        },
                         Attendance = new Attendance
                         {
-                            Id = rsvpId,
-                            RSVPId = rsvpId,
                             EventId = event2.Id,
                             CheckedIn = item.CheckedIn,
                             CheckedInTime = item.CheckedIn ? DateTime.UtcNow.AddMinutes(-30) : null
                         }
                     };
 
-                    await context.RSVPs.InsertOneAsync(rsvp);
-                    await context.Attendances.InsertOneAsync(rsvp.Attendance);
-                    rsvpId++;
+                    if (foodField != null)
+                    {
+                        rsvp.CustomFieldResponses.Add(new CustomFieldResponse
+                        {
+                            CustomFieldId = foodField.Id,
+                            Response = item.Food
+                        });
+                    }
+
+                    if (seatingField != null)
+                    {
+                        rsvp.CustomFieldResponses.Add(new CustomFieldResponse
+                        {
+                            CustomFieldId = seatingField.Id,
+                            Response = item.Seating
+                        });
+                    }
+
+                    db.RSVPs.Add(rsvp);
                 }
 
                 // Seed RSVPs for Event 3 (Hackathon)
+                var hackathonCustomFields = event3.CustomFields.ToList();
+                var majorField = hackathonCustomFields.FirstOrDefault(cf => cf.Label == "Course / Major");
+                var studentNoField = hackathonCustomFields.FirstOrDefault(cf => cf.Label == "Student Number");
+                var equipField = hackathonCustomFields.FirstOrDefault(cf => cf.Label == "Equipment Needed");
+
                 var hackathonRsvps = new List<(string Name, string Email, string Status, string Major, string StudentNo, string Equip)>
                 {
                     ("Jordan Miller", "jmiller@university.edu", "Going", "Computer Science", "CS-2023-8911", "External Monitor"),
@@ -188,32 +197,50 @@ namespace EventEase.Data
                 {
                     var rsvp = new RSVP
                     {
-                        Id = rsvpId,
                         EventId = event3.Id,
                         FullName = item.Name,
                         Email = item.Email,
                         Status = item.Status,
                         SubmittedAt = DateTime.UtcNow.AddDays(-3).AddHours(item.Name.Length),
-                        CustomFieldResponses = new List<CustomFieldResponse>
-                        {
-                            new CustomFieldResponse { Id = 1, RSVPId = rsvpId, CustomFieldId = 6, Response = item.Major },
-                            new CustomFieldResponse { Id = 2, RSVPId = rsvpId, CustomFieldId = 7, Response = item.StudentNo },
-                            new CustomFieldResponse { Id = 3, RSVPId = rsvpId, CustomFieldId = 8, Response = item.Equip }
-                        },
                         Attendance = new Attendance
                         {
-                            Id = rsvpId,
-                            RSVPId = rsvpId,
                             EventId = event3.Id,
                             CheckedIn = false,
                             CheckedInTime = null
                         }
                     };
 
-                    await context.RSVPs.InsertOneAsync(rsvp);
-                    await context.Attendances.InsertOneAsync(rsvp.Attendance);
-                    rsvpId++;
+                    if (majorField != null)
+                    {
+                        rsvp.CustomFieldResponses.Add(new CustomFieldResponse
+                        {
+                            CustomFieldId = majorField.Id,
+                            Response = item.Major
+                        });
+                    }
+
+                    if (studentNoField != null)
+                    {
+                        rsvp.CustomFieldResponses.Add(new CustomFieldResponse
+                        {
+                            CustomFieldId = studentNoField.Id,
+                            Response = item.StudentNo
+                        });
+                    }
+
+                    if (equipField != null)
+                    {
+                        rsvp.CustomFieldResponses.Add(new CustomFieldResponse
+                        {
+                            CustomFieldId = equipField.Id,
+                            Response = item.Equip
+                        });
+                    }
+
+                    db.RSVPs.Add(rsvp);
                 }
+
+                await db.SaveChangesAsync();
             }
         }
     }

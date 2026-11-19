@@ -1,25 +1,24 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using MongoDB.Bson.Serialization.Attributes;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace EventEase.Models
 {
     /// <summary>
     /// Represents an attendee's RSVP response to an event.
-    /// Stored as a document in the NoSQL "rsvps" collection.
     /// Attendees do not need an account.
     /// </summary>
-    [BsonIgnoreExtraElements]
     public class RSVP
     {
-        [BsonId]
+        [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
 
         [Required]
         public int EventId { get; set; }
 
-        [BsonIgnore]
+        [ForeignKey(nameof(EventId))]
         public virtual Event? Event { get; set; }
 
         [Required(ErrorMessage = "Full Name is required.")]
@@ -42,12 +41,12 @@ namespace EventEase.Models
         public DateTime SubmittedAt { get; set; } = DateTime.UtcNow;
 
         /// <summary>
-        /// Embedded NoSQL Document Array: Custom answers submitted by the attendee.
+        /// Relational Navigation: Custom answers submitted by the attendee.
         /// </summary>
         public virtual List<CustomFieldResponse> CustomFieldResponses { get; set; } = new List<CustomFieldResponse>();
 
         /// <summary>
-        /// Embedded or linked Attendance check-in status.
+        /// Relational Navigation: Linked Attendance check-in status.
         /// </summary>
         public virtual Attendance? Attendance { get; set; }
     }

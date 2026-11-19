@@ -1,25 +1,27 @@
 using System;
 using System.ComponentModel.DataAnnotations;
-using MongoDB.Bson.Serialization.Attributes;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace EventEase.Models
 {
     /// <summary>
     /// Represents the on-site event-day attendance verification record.
-    /// Stored both as a document in the NoSQL "attendances" collection and embedded inside RSVP.
     /// </summary>
-    [BsonIgnoreExtraElements]
     public class Attendance
     {
-        [BsonId]
+        [Key]
+        [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
 
         public int RSVPId { get; set; }
 
+        [ForeignKey(nameof(RSVPId))]
+        public virtual RSVP? RSVP { get; set; }
+
         public int EventId { get; set; }
 
-        [BsonIgnore]
-        public virtual RSVP? RSVP { get; set; }
+        [ForeignKey(nameof(EventId))]
+        public virtual Event? Event { get; set; }
 
         public bool CheckedIn { get; set; } = false;
 

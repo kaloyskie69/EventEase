@@ -5,160 +5,106 @@ using System.Threading.Tasks;
 using EventEase.Data;
 using EventEase.Interfaces;
 using EventEase.Models;
-using MongoDB.Driver;
+using Microsoft.EntityFrameworkCore;
 
 namespace EventEase.Repositories
 {
     /// <summary>
-    /// NoSQL Repository implementation for RSVPs using MongoDB / Document collections.
-    /// Custom field responses are embedded directly within each RSVP document.
+    /// Entity Framework Core repository implementation for RSVPs.
     /// </summary>
     public class RSVPRepository : IRSVPRepository
     {
-        private static readonly SemaphoreSlim SubmissionLock = new(1, 1);
-        private readonly MongoDbContext _context;
+        private readonly ApplicationDbContext _context;
 
-        public RSVPRepository(MongoDbContext context)
+        public RSVPRepository(ApplicationDbContext context)
         {
             _context = context;
         }
 
         public async Task<IEnumerable<RSVP>> GetByEventIdAsync(int eventId)
         {
-            // Batch load: fetch RSVPs, event, and attendances in parallel
-            var rsvpsTask = _context.RSVPs.FindAsync(r => r.EventId == eventId);
-            var eventTask = _context.Events.FindOneAsync(e => e.Id == eventId);
-            var attendancesTask = _context.Attendances.FindAsync(a => a.EventId == eventId);
-
-            await Task.WhenAll(rsvpsTask, eventTask, attendancesTask);
-
-            var rsvps = rsvpsTask.Result;
-            var ev = eventTask.Result;
-            var attendances = attendancesTask.Result;
-            var attendanceDict = attendances.ToDictionary(a => a.RSVPId);
-
-            // Single pass to link all related data — no N+1 lookups
-            foreach (var rsvp in rsvps)
-            {
-                rsvp.Event = ev;
-                if (rsvp.Attendance == null && attendanceDict.TryGetValue(rsvp.Id, out var att))
-                {
-                    rsvp.Attendance = att;
-                }
-
-                if (ev != null && rsvp.CustomFieldResponses != null)
-                {
-                    foreach (var resp in rsvp.CustomFieldResponses)
-                    {
-                        resp.CustomField = ev.CustomFields.FirstOrDefault(cf => cf.Id == resp.CustomFieldId);
-                    }
-                }
-            }
-
-            return rsvps.OrderByDescending(r => r.SubmittedAt).ToList();
+            return await _context.RSVPs
+                .Where(r => r.EventId == eventId)
+                .Include(r => r.Event)
+                    .ThenInclude(e => e!.CustomFields)
+                .Include(r => r.Attendance)
+                .Include(r => r.CustomFieldResponses)
+                    .ThenInclude(cfr => cfr.CustomField)
+                .OrderByDescending(r => r.SubmittedAt)
+                .ToListAsync();
         }
 
         public async Task<RSVP?> GetByIdAsync(int id)
         {
-            return await _context.RSVPs.FindOneAsync(r => r.Id == id);
+            return await _context.RSVPs.FirstOrDefaultAsync(r => r.Id == id);
         }
 
         public async Task<RSVP?> GetByIdWithDetailsAsync(int id)
         {
-            var rsvp = await _context.RSVPs.FindOneAsync(r => r.Id == id);
-            if (rsvp == null) return null;
-
-            var ev = await _context.Events.FindOneAsync(e => e.Id == rsvp.EventId);
-            rsvp.Event = ev;
-
-            if (rsvp.Attendance == null)
-            {
-                rsvp.Attendance = await _context.Attendances.FindOneAsync(a => a.RSVPId == id);
-            }
-
-            if (ev != null && rsvp.CustomFieldResponses != null)
-            {
-                foreach (var resp in rsvp.CustomFieldResponses)
-                {
-                    resp.CustomField = ev.CustomFields.FirstOrDefault(cf => cf.Id == resp.CustomFieldId);
-                }
-            }
-
-            return rsvp;
+            return await _context.RSVPs
+                .Include(r => r.Event)
+                    .ThenInclude(e => e!.CustomFields)
+                .Include(r => r.Attendance)
+                .Include(r => r.CustomFieldResponses)
+                    .ThenInclude(cfr => cfr.CustomField)
+                .FirstOrDefaultAsync(r => r.Id == id);
         }
 
         public async Task<bool> ExistsByEmailAsync(int eventId, string email)
         {
             var normalizedEmail = email.Trim().ToLowerInvariant();
-            return await _context.RSVPs.FindOneAsync(r => r.EventId == eventId && r.Email == normalizedEmail) != null;
+            return await _context.RSVPs.AnyAsync(r => r.EventId == eventId && r.Email.ToLower() == normalizedEmail);
         }
 
         public async Task<RSVP> AddAsync(RSVP rsvp, IEnumerable<CustomFieldResponse>? responses = null)
         {
-            await SubmissionLock.WaitAsync();
+            if (await ExistsByEmailAsync(rsvp.EventId, rsvp.Email))
+            {
+                throw new DuplicateRsvpException();
+            }
+
+            if (responses != null && responses.Any())
+            {
+                foreach (var resp in responses)
+                {
+                    resp.RSVP = rsvp;
+                    rsvp.CustomFieldResponses.Add(resp);
+                }
+            }
+
+            // Create initial Attendance record (CheckedIn = false)
+            var attendance = new Attendance
+            {
+                RSVP = rsvp,
+                EventId = rsvp.EventId,
+                CheckedIn = false,
+                CheckedInTime = null
+            };
+            rsvp.Attendance = attendance;
+
+            _context.RSVPs.Add(rsvp);
+            _context.Attendances.Add(attendance);
+
             try
             {
-                if (await ExistsByEmailAsync(rsvp.EventId, rsvp.Email))
-                {
-                    throw new DuplicateRsvpException();
-                }
-
-                if (rsvp.Id <= 0)
-                {
-                    rsvp.Id = await _context.GetNextRsvpIdAsync();
-                }
-
-                if (responses != null && responses.Any())
-                {
-                    var nextId = 1;
-                    foreach (var resp in responses)
-                    {
-                        resp.Id = nextId++;
-                        resp.RSVPId = rsvp.Id;
-                        rsvp.CustomFieldResponses.Add(resp);
-                    }
-                }
-
-                // Create initial Attendance record (CheckedIn = false)
-                var attendance = new Attendance
-                {
-                    Id = await _context.GetNextAttendanceIdAsync(),
-                    RSVPId = rsvp.Id,
-                    EventId = rsvp.EventId,
-                    CheckedIn = false,
-                    CheckedInTime = null
-                };
-
-                rsvp.Attendance = attendance;
-
-                try
-                {
-                    await _context.RSVPs.InsertOneAsync(rsvp);
-                }
-                catch (MongoWriteException ex) when (ex.WriteError?.Code == 11000)
-                {
-                    throw new DuplicateRsvpException();
-                }
-                await _context.Attendances.InsertOneAsync(attendance);
-
-                return rsvp;
+                await _context.SaveChangesAsync();
             }
-            finally
+            catch (DbUpdateException)
             {
-                SubmissionLock.Release();
+                throw new DuplicateRsvpException();
             }
+
+            return rsvp;
         }
 
         public async Task<int> GetCountByEventIdAsync(int eventId)
         {
-            var count = await _context.RSVPs.CountDocumentsAsync(r => r.EventId == eventId);
-            return (int)count;
+            return await _context.RSVPs.CountAsync(r => r.EventId == eventId);
         }
 
         public async Task<int> GetCountByStatusAsync(int eventId, string status)
         {
-            var count = await _context.RSVPs.CountDocumentsAsync(r => r.EventId == eventId && r.Status == status);
-            return (int)count;
+            return await _context.RSVPs.CountAsync(r => r.EventId == eventId && r.Status == status);
         }
     }
 
